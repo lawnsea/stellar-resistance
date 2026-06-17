@@ -58,8 +58,9 @@ Each entity is a list of properties. Properties marked **(derived)** are compute
 - **credits**: money held by the cell
 - **resources**: objects in the world held by the cell
 - **proficiencies**: a vector of skill levels (e.g. tradecraft), aggregated from the members' proficiencies (derived)
-- **capabilities**: the actions the cell can take; a base set (recruit members, recruit cells, basic espionage, train), plus actions added by resources (e.g. weapons add military actions) and by operative members (e.g. call for reinforcements) (derived)
+- **capabilities**: the actions the cell can take; a base set (recruit members, recruit cells, basic espionage, train), plus actions added by resources (e.g. weapons add military actions) and by operative members (e.g. call for reinforcements), each further gated by the cell's militancy toward the action's target clearing that action's threshold (derived)
 - **culture/religion composition**: the aggregate apparent identity of the members (derived)
+- **faction/cultural/religious attitudes**: a fear/militancy/loyalty triple toward each faction/culture/religion encountered, aggregated from members' attitudes (derived); militancy toward an action's target gates which of the cell's capabilities are available, and militancy − fear (of the target) + loyalty (to the cell's own faction) − loyalty (toward the target) sets willingness to use an available one
 - **actions**: the actions the cell is currently undertaking; each commits members and resources that cannot be reused until it completes
 
 ---
@@ -107,7 +108,7 @@ Each entity is a list of properties. Properties marked **(derived)** are compute
 
 These are referenced by the entities above but not yet decided as first-class entities vs. structures:
 
-- **Action**: a committed, possibly multi-step undertaking by a cell/operative; commits members and resources, has a target, generates intel and exposure, can be paused/sabotaged/interrupted/defeated. Likely a first-class entity given its state.
+- **Action**: a committed, possibly multi-step undertaking by a cell/operative; commits members and resources, has a target, generates intel and exposure, can be paused/sabotaged/interrupted/defeated. Each action type carries a **violence** level setting its minimum militancy requirement — minimal to publish a newspaper, higher to stage a street protest, highest to assassinate. Likely a first-class entity given its state.
 - **Resource**: an object in the world (weapons, safehouse, press, cache) held by a cell/faction; adds capabilities. Likely first-class.
 - **Intel entry**: a (holder, target, attribute) claim with confidence; accuracy derived against truth. A structure within perceived world state rather than a standalone entity.
 - **Cover**: a set of claimed false facts an operative presents; written into observers' perceived world state scaled by tradecraft. A structure on the operative rather than a standalone entity.

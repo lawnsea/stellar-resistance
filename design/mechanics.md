@@ -19,6 +19,12 @@
 - **Initialization**: pop attitudes initialize from the culture's/religion's default vectors on first contact, then diverge through experience.
 - **Aggregation**: faction and cell cultural/religious attitudes are aggregated from member pops' attitudes.
 
+## Militancy gates action
+
+- **Capability vs. willingness**: an action's violence level sets a minimum militancy threshold — minimal to publish a newspaper, higher to stage a street protest, highest to assassinate. A cell's militancy toward the action's target gates whether the action is *available* at all (capability); separately, willingness extends radicalization toward the target (militancy − fear) by adding loyalty to the cell's own faction and subtracting loyalty toward the target itself. The two loyalties pull opposite ways: a cell can carry real loyalty toward a target it still acts against, so long as militancy and cause-loyalty outweigh that residual pull — a loyalist who believes violence is necessary to correct the target's course, not abandon it.
+- **Reception mirrors initiation**: the same threshold gates how an entity reacts to a proposed or reported action, not just whether it can carry one out — a pop or cell may support nonviolent protest while balking at (or souring on) an assassination campaign run by its own faction, if its militancy falls short of that action's threshold. Support for a faction is not monolithic across the violence spectrum; it must be checked per action.
+- **Raising militancy deliberately**: militancy responds to intel as well as to direct witnessing (see Propagation of violence below) — an operative placed in a cell can share evidence of an atrocity, and a credible (confidence-weighted) claim of this kind raises the cell's militancy through the same channel, letting a faction (or a player) deliberately escalate a cell toward capabilities it doesn't yet have.
+
 ## Standard of living & acceptance
 
 - **SoL**: derived from local production/employment/extraction, reduced by low acceptance.
