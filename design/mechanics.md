@@ -102,9 +102,10 @@
 
 ## Proficiencies
 
-- **Vector**: a vector of skill levels (e.g. tradecraft) on pops and operatives; cells aggregate members' (derived).
+- **Vector**: a vector of skill levels (e.g. tradecraft, discipline) on pops and operatives; cells aggregate members' (derived).
 - **Inheritance**: initialized from the culture's defaults (culture → pop → operative), then diverge through experience.
 - **Tradecraft**: reduces exposure and improves cover and espionage success.
+- **Discipline**: governs how efficiently and effectively an entity executes an action — higher discipline speeds completion and raises success odds, independent of the action's violence/militancy gate.
 - **Observation (co-membership)**: each tick, a cell member gains a small fraction toward the max proficiency among the other members, capped at that max, per proficiency.
 - **Observation (collaboration)**: an additional small per-tick bump scoped to an action's participants (may cross cells).
 - **Training**: a base capability; an entity trains another (or a group) on a chosen proficiency by a larger per-tick fraction of the trainer's level, capped at it; commits trainer and trainees and risks exposure.

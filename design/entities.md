@@ -24,7 +24,7 @@ Each entity is a list of properties. Properties marked **(derived)** are compute
 - **religious attitudes**: a triple toward each religion the pop has encountered; instantiated from this pop's religion's default-toward-that-religion vector on first contact
 
 **Proficiencies**
-- **proficiencies**: a vector of skill levels (e.g. tradecraft), initialized from the culture's defaults, then diverge through experience
+- **proficiencies**: a vector of skill levels (e.g. tradecraft, discipline), initialized from the culture's defaults, then diverge through experience
 
 **Perceived world state (beliefs about other entities; updated only by received intel)**
 - **perceived world state**: entries keyed per (target, attribute), each a claimed value with a confidence; the pop's beliefs about other entities, distinct from its attitudes (a pop may hold false beliefs about a faction it nonetheless has a real attitude toward)
@@ -57,7 +57,7 @@ Each entity is a list of properties. Properties marked **(derived)** are compute
 - **perceived world state**: the cell's beliefs about other entities (per target, attribute: claimed value, confidence)
 - **credits**: money held by the cell
 - **resources**: objects in the world held by the cell
-- **proficiencies**: a vector of skill levels (e.g. tradecraft), aggregated from the members' proficiencies (derived)
+- **proficiencies**: a vector of skill levels (e.g. tradecraft, discipline), aggregated from the members' proficiencies (derived)
 - **capabilities**: the actions the cell can take; a base set (recruit members, recruit cells, basic espionage, train), plus actions added by resources (e.g. weapons add military actions) and by operative members (e.g. call for reinforcements), each further gated by the cell's militancy toward the action's target clearing that action's threshold (derived)
 - **culture/religion composition**: the aggregate apparent identity of the members (derived)
 - **faction/cultural/religious attitudes**: a fear/militancy/loyalty triple toward each faction/culture/religion encountered, aggregated from members' attitudes (derived); militancy toward an action's target gates which of the cell's capabilities are available, and militancy − fear (of the target) + loyalty (to the cell's own faction) − loyalty (toward the target) sets willingness to use an available one
@@ -77,7 +77,7 @@ Each entity is a list of properties. Properties marked **(derived)** are compute
 - **perceived world state**: the operative's beliefs about other entities (per target, attribute: claimed value, confidence); shared with cells selectively
 - **credits**: money carried by the operative
 - **resources**: objects carried by the operative
-- **proficiencies**: a vector of skill levels (e.g. tradecraft), initialized from the origin pop's culture defaults, then diverging through experience
+- **proficiencies**: a vector of skill levels (e.g. tradecraft, discipline), initialized from the origin pop's culture defaults, then diverging through experience
 - **capabilities**: the actions the operative contributes to a cell (derived)
 
 ---
