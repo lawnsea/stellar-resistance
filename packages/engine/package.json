@@ -1,0 +1,21 @@
+{
+  "name": "@lawnsea/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "json-schema-to-ts": "^3.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.9",
+    "@types/node": "^24.0.0"
+  }
+}
