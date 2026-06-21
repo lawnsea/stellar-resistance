@@ -1,3 +1,4 @@
+import { struct, u8, u16, u32, s32, f32, f64, type Layout as BufferLayout } from "@solana/buffer-layout";
 import { Store } from "./store.js";
 
 export type FieldType = "u8" | "u16" | "u32" | "i32" | "f32" | "f64";
@@ -25,6 +26,16 @@ const FIELD_TYPE_INFO: Record<FieldType, FieldTypeInfo> = {
   i32: { bytes: 4, ArrayType: Int32Array, dataViewGet: "getInt32", dataViewSet: "setInt32" },
   f32: { bytes: 4, ArrayType: Float32Array, dataViewGet: "getFloat32", dataViewSet: "setFloat32" },
   f64: { bytes: 8, ArrayType: Float64Array, dataViewGet: "getFloat64", dataViewSet: "setFloat64" },
+};
+
+/** buffer-layout's signed-32 factory is named `s32`, not `i32`. */
+const LAYOUT_FACTORY: Record<FieldType, (property: string) => BufferLayout<number>> = {
+  u8,
+  u16,
+  u32,
+  i32: s32,
+  f32,
+  f64,
 };
 
 interface FieldAccessor {
@@ -56,18 +67,20 @@ export interface EntityCollection<Fields extends Record<string, FieldType>> {
   readonly capacity: number;
 }
 
-function buildAosAccessors<Fields extends Record<string, FieldType>>(
+/** @internal exported only for the byte-layout regression test in schema.test.ts */
+export function buildAosAccessors<Fields extends Record<string, FieldType>>(
   fields: Fields,
   capacity: number,
-): { accessors: Record<string, FieldAccessor>; grow: (newCapacity: number) => void; stride: number } {
+): {
+  accessors: Record<string, FieldAccessor>;
+  grow: (newCapacity: number) => void;
+  stride: number;
+  offsetOf: (name: keyof Fields & string) => number;
+} {
   const names = Object.keys(fields) as (keyof Fields & string)[];
-  let offset = 0;
-  const offsets: Record<string, number> = {};
-  for (const name of names) {
-    offsets[name] = offset;
-    offset += FIELD_TYPE_INFO[fields[name]!].bytes;
-  }
-  const stride = offset;
+  const rowLayout = struct<Record<string, number>>(names.map((name) => LAYOUT_FACTORY[fields[name]!](name)));
+  const stride = rowLayout.span;
+  const offsetOf = (name: keyof Fields & string): number => rowLayout.offsetOf(name)!;
 
   let buffer = new ArrayBuffer(Math.max(capacity, 1) * stride);
   let view = new DataView(buffer);
@@ -82,7 +95,7 @@ function buildAosAccessors<Fields extends Record<string, FieldType>>(
   const accessors: Record<string, FieldAccessor> = {};
   for (const name of names) {
     const info = FIELD_TYPE_INFO[fields[name]!];
-    const fieldOffset = offsets[name]!;
+    const fieldOffset = rowLayout.offsetOf(name)!;
     accessors[name] = {
       get(index: number): number {
         return (view[info.dataViewGet] as (byteOffset: number, littleEndian?: boolean) => number)(
@@ -98,7 +111,7 @@ function buildAosAccessors<Fields extends Record<string, FieldType>>(
     };
   }
 
-  return { accessors, grow, stride };
+  return { accessors, grow, stride, offsetOf };
 }
 
 function buildSoaAccessors<Fields extends Record<string, FieldType>>(

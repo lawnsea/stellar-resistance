@@ -1,5 +1,10 @@
 import { defineEntitySchema, type EntityView } from "../storage/schema.js";
 import {
+  fieldsFromJsonSchema,
+  type BinaryFieldSchema,
+  type EntityJsonSchema,
+} from "../storage/json-schema-fields.js";
+import {
   asPopId,
   asPlanetId,
   asCultureId,
@@ -18,17 +23,22 @@ export enum Origin {
   Conquered = 2,
 }
 
-const POP_FIELDS = {
-  size: "u32",
-  planet: "u32",
-  culture: "u32",
-  religion: "i32",
-  origin: "u8",
-  standardOfLiving: "f64",
-  expectedStandardOfLiving: "f64",
-  tradecraft: "f32",
-  discipline: "f32",
-} as const;
+const PopSchema = {
+  type: "object",
+  properties: {
+    size: { type: "integer", minimum: 0, "x-binary": "u32" },
+    planet: { type: "integer", "x-binary": "u32" },
+    culture: { type: "integer", "x-binary": "u32" },
+    religion: { type: "integer", "x-binary": "i32" },
+    origin: { enum: [0, 1, 2], "x-binary": "u8" },
+    standardOfLiving: { type: "number", "x-binary": "f64" },
+    expectedStandardOfLiving: { type: "number", "x-binary": "f64" },
+    tradecraft: { type: "number", "x-binary": "f32" },
+    discipline: { type: "number", "x-binary": "f32" },
+  },
+} as const satisfies EntityJsonSchema<Record<string, BinaryFieldSchema>>;
+
+const POP_FIELDS = fieldsFromJsonSchema(PopSchema);
 
 type PopRawView = EntityView<typeof POP_FIELDS>;
 

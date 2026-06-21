@@ -1,4 +1,9 @@
 import { defineRelationTable, type RelationRow } from "../storage/relation-table.js";
+import {
+  fieldsFromJsonSchema,
+  type BinaryFieldSchema,
+  type EntityJsonSchema,
+} from "../storage/json-schema-fields.js";
 import type { PopId } from "../ids.js";
 
 /**
@@ -7,14 +12,19 @@ import type { PopId } from "../ids.js";
  * target (propagation of violence, etc.) isn't modeled yet. For v1 the
  * target is just a settable input; tick/tick.ts relaxes current toward it.
  */
-export const ATTITUDE_FIELDS = {
-  fear: "f32",
-  fearTarget: "f32",
-  militancy: "f32",
-  militancyTarget: "f32",
-  loyalty: "f32",
-  loyaltyTarget: "f32",
-} as const;
+const AttitudeSchema = {
+  type: "object",
+  properties: {
+    fear: { type: "number", "x-binary": "f32" },
+    fearTarget: { type: "number", "x-binary": "f32" },
+    militancy: { type: "number", "x-binary": "f32" },
+    militancyTarget: { type: "number", "x-binary": "f32" },
+    loyalty: { type: "number", "x-binary": "f32" },
+    loyaltyTarget: { type: "number", "x-binary": "f32" },
+  },
+} as const satisfies EntityJsonSchema<Record<string, BinaryFieldSchema>>;
+
+export const ATTITUDE_FIELDS = fieldsFromJsonSchema(AttitudeSchema);
 
 export type AttitudeRow = RelationRow<typeof ATTITUDE_FIELDS>;
 
