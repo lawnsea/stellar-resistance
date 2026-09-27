@@ -70,6 +70,18 @@ The first milestone, **MVP: Planet viewer**, is a technical vertical slice with 
 - How much game time does one turn represent?
 
 # Bibliography
+
+- Baclagon, C. (n.d.). [Andor Through the Lens of Resistance and the Struggle for Power][cbaclagon-andor-thru-lens-of-resistance]. *Medium*.
+- Clayton, G., et al. (2011). [The Method Makes the Manuscript: Key Texts in the Theoretical and Methodological Advancement of the Study of Civil War][clayton-et-al-key-texts-in-study-of-civil-war]. *Journal of Intervention and Statebuilding* 5(2).
+- Devereaux, B. (2026). [Collections: Against the State – A Primer on Terrorism, Insurgency and Protest][acoup-insurgency]. *A Collection of Unmitigated Pedantry*.
+- Kalyvas, S. N., & Kocher, M. A. (2007). [How "Free" Is Free Riding in Civil Wars? Violence, Insurgency, and the Collective Action Problem][kalyvas-kocher-collective-action-problem]. *World Politics* 59(2).
+- Kydd, A. H., & Walter, B. F. (2006). [The Strategies of Terrorism][kydd-walter-strategies-of-terrorism]. *International Security* 31(1).
+- Paradox Interactive (2021). Stellaris Dev Diaries: [#194 Intel][stellaris-dev-diary-194]; [#196 Redacted][stellaris-dev-diary-196]; [#197 Operations and Assets][stellaris-dev-diary-197]; [#198 Provocations][stellaris-dev-diary-198].
+- Pepinsky, T. (2017). [Everyday Authoritarianism is Boring and Tolerable][pepinsky-authoritarianism-is-boring-and-tolerable].
+- Ricks, T. E. (2022). [*Waging a Good War: A Military History of the Civil Rights Movement, 1954–1968*][ricks-waging-a-good-war].
+- Staniland, P. (2010). [*Explaining Cohesion, Fragmentation, and Control in Insurgent Groups*][staniland-cohesion-in-insurgents]. PhD thesis, MIT.
+- Weinstein, J. M. (2007). [*Inside Rebellion: The Politics of Insurgent Violence*][weinstein-inside-rebellion].
+
 [acoup-insurgency]: https://acoup.blog/2026/02/13/collections-against-the-state-a-primer-on-terrorism-insurgency-and-protest/
 [cbaclagon-andor-thru-lens-of-resistance]: https://medium.com/@cbaclagon/andor-through-the-lens-of-resistance-and-the-struggle-for-power-5ef5dd4adfde
 [clayton-et-al-key-texts-in-study-of-civil-war]: https://kar.kent.ac.uk/37660/1/Clayton%20et%20al%20Review%20SB.pdf
