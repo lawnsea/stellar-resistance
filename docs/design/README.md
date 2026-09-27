@@ -1,73 +1,34 @@
-# High-level design
-
-## Vision
-
 Stellar Resistance is a grand strategy game about insurgency. You start as the leader of a single small resistance cell on one planet of an oppressive interstellar empire. By recruiting, spreading to new worlds, and allying with or absorbing other resistance groups, you try to grow that cell into a movement strong enough to overthrow the empire.
+
+# High-level design
 
 ## Design pillars
 
-### Emergent simulation
+- imperfect information: no actors in the game have access to the true game state. instead, each maintains its own perceived gamestate that it updates with new information as it arrives
+- emergent simulation: outcomes arise from simulated populations' grievances, loyalties, and willingness to act, not from scripted events
+- cost of escalation: violence can radicalize supporters, but it also alienates potential allies and provokes repression
+- grounded in research: mechanics draw on scholarship about insurgency, civil war, and resistance movements (see [bibliography](#bibliography))
 
-Outcomes come from simulated populations rather than scripted events. Each population has its own grievances, loyalties, and willingness to act. The resistance's fortunes rise and fall with how those populations respond to the empire's rule and to the resistance's own actions. This includes the uncomfortable fact that most people under an authoritarian regime simply get on with their lives ([Pepinsky][pepinsky-authoritarianism-is-boring-and-tolerable]).
+## Gameplay
 
-### Intel & deception
-
-The player never sees the whole board. What you know about the empire, other resistance groups, and even your own cells comes from intel that may be incomplete, stale, or deliberately false. Gathering, protecting, and manipulating information is central to play (see the Stellaris intel and operations dev diaries: [194][stellaris-dev-diary-194], [196][stellaris-dev-diary-196], [197][stellaris-dev-diary-197], [198][stellaris-dev-diary-198]).
-
-### Cost of escalation
-
-Violence is a tool with real costs. Escalating can radicalize supporters, but it can also alienate potential allies and provoke repression that falls on the populations the resistance depends on. The game should make the choice between nonviolent and violent strategies a meaningful one ([Kydd & Walter][kydd-walter-strategies-of-terrorism], [Ricks][ricks-waging-a-good-war]).
-
-### Grounded in research
-
-Mechanics draw on scholarship about insurgency, civil war, and resistance movements, including collective action, insurgent cohesion, and recruitment ([Kalyvas & Kocher][kalyvas-kocher-collective-action-problem], [Staniland][staniland-cohesion-in-insurgents], [Weinstein][weinstein-inside-rebellion], [Clayton et al.][clayton-et-al-key-texts-in-study-of-civil-war], [ACOUP][acoup-insurgency]). Fiction such as *Andor* informs tone ([Baclagon][cbaclagon-andor-thru-lens-of-resistance]). Where the research and fun conflict, the tradeoff should be deliberate and documented.
-
-## Player role
-
-The player is the leader of a resistance cell, not an abstract, all-seeing faction. The player's reach grows by:
-
-- recruiting new members
-- founding new cells on other planets
-- allying with, or absorbing, other resistance groups
-
-## Core loop
-
-1. Gather intel on the empire, local populations, and other groups.
-2. Plan operations and assign cells and members to them.
-3. The simulation advances: operations resolve, populations' attitudes shift, and the empire responds.
-4. React to the results, then repeat.
-
-## Time
-
-The game advances in discrete turns, each representing a fixed span of game time. As in Paradox grand strategy games, the player pauses, resumes, and changes speed. There is no "end turn" button, so pausing is how the player stops to think and give orders.
-
-## Win and loss
-
-- **Win:** overthrow the empire.
-- **Loss:** the resistance network is destroyed.
-
-The exact conditions for both are open questions.
-
-## Audience
-
-Grand strategy players who are comfortable with deep systems and a steep learning curve, such as fans of Paradox games, Dominions, and Shadow Empire.
-
-## MVP scope
-
-The first milestone, **MVP: Planet viewer**, is a technical vertical slice with no gameplay yet. It covers this design doc, the architecture and stack docs, a working dev environment, a minimal Planet entity, and a UI for browsing planets.
+- player role: leader of a resistance cell who grows by recruiting, founding cells on other planets, and allying with or absorbing other resistance groups
+- core loop: gather intel, plan and assign operations, let the simulation respond, react
+- time: discrete turns, each a fixed span of game time. the player pauses, resumes, and changes speed; there is no "end turn" button
+- win: overthrow the empire
+- loss: the resistance network is destroyed
+- audience: grand strategy players (Paradox, Dominions, Shadow Empire)
 
 ## Non-goals
 
-- **Playable empire:** the empire is AI-controlled only.
-- **Tactical combat:** conflicts resolve abstractly, with no battle maps.
-- **Reflex play:** the player can pause at any moment and issue orders while paused.
+- playable empire: the empire is AI-only
+- tactical combat: conflicts resolve abstractly
+- reflex play: the player can pause at any moment and give orders while paused
 
 ## Open questions
 
-- Is multiplayer in scope at any point?
-- What are the precise win and loss conditions?
-- What does "overthrowing the empire" mean mechanically?
-- How much game time does one turn represent?
+- is multiplayer ever in scope?
+- what are the exact win and loss conditions, and what does overthrowing the empire mean mechanically?
+- how much game time does one turn represent?
 
 # Bibliography
 
