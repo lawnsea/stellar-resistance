@@ -12,4 +12,4 @@ The simulation backend can run either in a web worker on the user's device or in
 
 ## Observable
 
-The app is instrumented to produce logs and metrics characterizing its behavior and performance. This observability data is easy to view in development.
+The app is instrumented to produce logs and metrics usefully characterizing its behavior and performance. This observability data is easy to view in development.
