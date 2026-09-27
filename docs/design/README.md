@@ -7,7 +7,6 @@ Stellar Resistance is a grand strategy game about insurgency. You start as the l
 - imperfect information: no actors in the game have access to the true game state. instead, each maintains its own perceived gamestate that it updates with new information as it arrives
 - emergent simulation: outcomes arise from simulated populations' grievances, loyalties, and willingness to act, not from scripted events
 - cost of escalation: violence can radicalize supporters, but it also alienates potential allies and provokes repression
-- grounded in research: mechanics draw on scholarship about insurgency, civil war, and resistance movements (see [bibliography](#bibliography))
 
 ## Gameplay
 
