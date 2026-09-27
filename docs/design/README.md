@@ -18,12 +18,6 @@ Stellar Resistance is a grand strategy game about insurgency. You start as the l
 - loss: the resistance network is destroyed
 - audience: grand strategy players (Paradox, Dominions, Shadow Empire)
 
-## Non-goals
-
-- playable empire: the empire is AI-only
-- tactical combat: conflicts resolve abstractly
-- reflex play: the player can pause at any moment and give orders while paused
-
 # Bibliography
 
 - Baclagon, C. (n.d.). [Andor Through the Lens of Resistance and the Struggle for Power][cbaclagon-andor-thru-lens-of-resistance]. *Medium*.
