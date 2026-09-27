@@ -1,20 +1,30 @@
-Stellar Resistance is a grand strategy game about insurgency. You start as the leader of a single small resistance cell on one planet of an oppressive interstellar empire. By recruiting, spreading to new worlds, and allying with or absorbing other resistance groups, you try to grow that cell into a movement strong enough to overthrow the empire.
+Stellar Resistance is a grand strategy game about insurgency. You play as the leader of a resistance network fighting to overthrow an oppressive interstellar empire. By recruiting, spreading to new worlds, and allying with or absorbing other resistance groups, you must grow your network from a single cell into a movement strong enough to overthrow the empire.
+
+Be careful who you trust along the way, however. Your oppressors have eyes and ears everywhere and work tirelessly to find and snuff out all resistance. They control the public flow of information and smother rumors of dissent in mountains of propaganda and misinformation.
 
 # High-level design
 
 ## Design pillars
 
-### Imperfect information
+### Resistance is necessary and possible
 
-No actor in the game has access to the true game state. Instead, each maintains its own perceived game state, which it updates as new information arrives.
+This game is an anti-fascist work inspired by Tony Gilroy's Andor. Oppression is brittle and ultimately incapable of suppressing the pure idea of freedom.
 
-### Emergent simulation
+### Information is imperfect and uncertain
+
+No actor in the game has access to the true game state. Instead, each maintains its own perceived game state, which it updates as new information arrives. When doing so, the actor weights the new information based on how much it trusts the source. The apparent source of the information is not fully certain either. The new information might be misinformation crafted to appear like it came from another source.
+
+### First-person point of view
+
+The player controls the leader of the network, not the network itself. They must delegate and accept the uncertainty and risk that trusting others entails.
+
+### Emergent outcomes driven by the people
 
 Outcomes arise from simulated populations' grievances, loyalties, and willingness to act, not from scripted events.
 
-### Cost of escalation
+### Violence is effective, but comes at a real cost
 
-Violence can radicalize supporters, but it also alienates potential allies and provokes repression.
+Violent resistance can radicalize supporters and is necessary to degrade the capability of the empire, but it also alienates potential allies and provokes repression.
 
 # Bibliography
 
