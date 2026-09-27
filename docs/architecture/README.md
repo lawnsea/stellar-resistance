@@ -4,12 +4,12 @@ Stellar Resistance is a web app that runs in both mobile and desktop browsers. I
 
 ## Built on the web and built for all
 
-The app should be responsive and accessible so that it reaches as many users on as many devices as possible.
+The app is responsive and accessible so that it reaches as many users on as many devices as possible.
 
 ## Portable backend
 
-The simulation backend should be able to run either in a web worker on the user's device or in a Node.js process on a cloud instance.
+The simulation backend can run either in a web worker on the user's device or in a Node.js process on a cloud instance.
 
 ## Observable
 
-The app should be instrumented to produce logs and metrics characterizing its behavior and performance. This observability data should be easy to view in development.
+The app is instrumented to produce logs and metrics characterizing its behavior and performance. This observability data is easy to view in development.
