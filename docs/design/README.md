@@ -1,4 +1,4 @@
-Stellar Resistance is a grand strategy game about insurgency. You play as the leader of a resistance network fighting to overthrow an oppressive interstellar empire. By recruiting, spreading to new worlds, and allying with or absorbing other resistance groups, you must grow your network from a single cell into a movement strong enough to overthrow the empire.
+Stellar Resistance is a grand strategy game about insurgency. You play as the leader of a resistance network fighting to overthrow an oppressive interstellar empire. By recruiting, spreading to new worlds, and allying with or absorbing other resistance groups, you must grow your network from a single cell into a movement strong enough to defeat the empire.
 
 Be careful who you trust along the way, however. Your oppressors have eyes and ears everywhere and work tirelessly to find and snuff out all resistance. They control the public flow of information and smother rumors of dissent in mountains of propaganda and misinformation.
 
@@ -8,21 +8,21 @@ Be careful who you trust along the way, however. Your oppressors have eyes and e
 
 ### Resistance is necessary and possible
 
-This game is an anti-fascist work inspired by Tony Gilroy's *Andor*. Oppression is brittle and ultimately incapable of suppressing the pure idea of freedom ([*Andor* S1E12, "Rix Road"][andor-rix-road]).
+This game is an anti-fascist work inspired by Tony Gilroy's *Andor*. "Authority is brittle" and oppression is ultimately incapable of suppressing the "pure idea" of freedom ([*Andor* S1E12, "Rix Road"][andor-rix-road]).
 
 ### Information is imperfect and uncertain
 
-No actor in the game has access to the true game state. Instead, each maintains its own perceived game state, which it updates as new information arrives. When doing so, the actor weights the new information based on how much it trusts the source. The apparent source of the information is not fully certain either. The new information might be misinformation crafted to appear like it came from another source.
+No actor in the game has access to the true game state. Instead, each maintains its own perceived game state, which it updates as new information arrives. When doing so, the actor weights the new information based on how much it trusts the source. Even the apparent source of the information is uncertain: the new information might be misinformation crafted to appear to come from another source.
 
 ### First-person point of view
 
-The player controls the leader of the network, not the network itself. They must delegate and accept the uncertainty and risk that trusting others entails.
+You control the leader of the network, not the network itself. You must delegate and accept the uncertainty and risk that trusting others entails.
 
 ### Emergent outcomes driven by the people
 
 Outcomes arise from simulated populations' grievances, loyalties, and willingness to act, not from scripted events.
 
-### Violence is effective, but comes at a real cost
+### Violence is effective but comes at a real cost
 
 Violent resistance can radicalize supporters and is necessary to degrade the capability of the empire, but it also alienates potential allies and provokes repression.
 
@@ -31,7 +31,7 @@ Violent resistance can radicalize supporters and is necessary to degrade the cap
 - Baclagon, C. (2025). [Andor Through the Lens of Resistance and the Struggle for Power][cbaclagon-andor-thru-lens-of-resistance]. *Medium*.
 - Clayton, G., et al. (2011). [The Method Makes the Manuscript: Key Texts in the Theoretical and Methodological Advancement of the Study of Civil War][clayton-et-al-key-texts-in-study-of-civil-war]. *Journal of Intervention and Statebuilding* 5(2).
 - Devereaux, B. (2026). [Collections: Against the State – A Primer on Terrorism, Insurgency and Protest][acoup-insurgency]. *A Collection of Unmitigated Pedantry*.
-- Gilroy, T. (Creator) (2022–2025). [*Andor*][gilroy-andor]. Disney+.
+- Gilroy, T. (Creator). (2022–2025). [*Andor*][gilroy-andor]. Disney+.
 - Kalyvas, S. N., & Kocher, M. A. (2007). [How "Free" Is Free Riding in Civil Wars? Violence, Insurgency, and the Collective Action Problem][kalyvas-kocher-collective-action-problem]. *World Politics* 59(2).
 - Kydd, A. H., & Walter, B. F. (2006). [The Strategies of Terrorism][kydd-walter-strategies-of-terrorism]. *International Security* 31(1).
 - Paradox Interactive (2021). Stellaris Dev Diaries: [#194 Intel][stellaris-dev-diary-194]; [#196 Redacted][stellaris-dev-diary-196]; [#197 Operations and Assets][stellaris-dev-diary-197]; [#198 Provocations][stellaris-dev-diary-198].
