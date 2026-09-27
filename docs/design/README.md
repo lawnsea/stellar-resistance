@@ -8,7 +8,7 @@ Be careful who you trust along the way, however. Your oppressors have eyes and e
 
 ### Resistance is necessary and possible
 
-This game is an anti-fascist work inspired by Tony Gilroy's Andor. Oppression is brittle and ultimately incapable of suppressing the pure idea of freedom.
+This game is an anti-fascist work inspired by Tony Gilroy's *Andor*. Oppression is brittle and ultimately incapable of suppressing the pure idea of freedom ([*Andor* S1E12, "Rix Road"][andor-rix-road]).
 
 ### Information is imperfect and uncertain
 
@@ -31,6 +31,7 @@ Violent resistance can radicalize supporters and is necessary to degrade the cap
 - Baclagon, C. (2025). [Andor Through the Lens of Resistance and the Struggle for Power][cbaclagon-andor-thru-lens-of-resistance]. *Medium*.
 - Clayton, G., et al. (2011). [The Method Makes the Manuscript: Key Texts in the Theoretical and Methodological Advancement of the Study of Civil War][clayton-et-al-key-texts-in-study-of-civil-war]. *Journal of Intervention and Statebuilding* 5(2).
 - Devereaux, B. (2026). [Collections: Against the State – A Primer on Terrorism, Insurgency and Protest][acoup-insurgency]. *A Collection of Unmitigated Pedantry*.
+- Gilroy, T. (Creator) (2022–2025). [*Andor*][gilroy-andor]. Disney+.
 - Kalyvas, S. N., & Kocher, M. A. (2007). [How "Free" Is Free Riding in Civil Wars? Violence, Insurgency, and the Collective Action Problem][kalyvas-kocher-collective-action-problem]. *World Politics* 59(2).
 - Kydd, A. H., & Walter, B. F. (2006). [The Strategies of Terrorism][kydd-walter-strategies-of-terrorism]. *International Security* 31(1).
 - Paradox Interactive (2021). Stellaris Dev Diaries: [#194 Intel][stellaris-dev-diary-194]; [#196 Redacted][stellaris-dev-diary-196]; [#197 Operations and Assets][stellaris-dev-diary-197]; [#198 Provocations][stellaris-dev-diary-198].
@@ -40,8 +41,10 @@ Violent resistance can radicalize supporters and is necessary to degrade the cap
 - Weinstein, J. M. (2007). [*Inside Rebellion: The Politics of Insurgent Violence*][weinstein-inside-rebellion].
 
 [acoup-insurgency]: https://acoup.blog/2026/02/13/collections-against-the-state-a-primer-on-terrorism-insurgency-and-protest/
+[andor-rix-road]: https://en.wikipedia.org/wiki/Rix_Road
 [cbaclagon-andor-thru-lens-of-resistance]: https://medium.com/@cbaclagon/andor-through-the-lens-of-resistance-and-the-struggle-for-power-5ef5dd4adfde
 [clayton-et-al-key-texts-in-study-of-civil-war]: https://kar.kent.ac.uk/37660/1/Clayton%20et%20al%20Review%20SB.pdf
+[gilroy-andor]: https://en.wikipedia.org/wiki/Andor_(TV_series)
 [kalyvas-kocher-collective-action-problem]: https://www.cambridge.org/core/services/aop-cambridge-core/content/view/EAAA891D5C9D591089EAA9705A6021D6/S0043887100020785a.pdf/how-free-is-free-riding-in-civil-wars-violence-insurgency-and-the-collective-action-problem.pdf
 [kydd-walter-strategies-of-terrorism]: https://www.belfercenter.org/sites/default/files/pantheon_files/files/publication/is3101_pp049-080_kydd_walter.pdf
 [pepinsky-authoritarianism-is-boring-and-tolerable]: https://tompepinsky.com/2017/01/06/everyday-authoritarianism-is-boring-and-tolerable/
