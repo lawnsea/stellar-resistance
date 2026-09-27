@@ -1,25 +1,15 @@
-Stellar Resistance is a web app that runs in both mobile and desktop browsers. It can be installed as a progressive web app and is fully playable offline once loaded, with saves stored locally.
-
-The app is multi-threaded. It is decomposed into collaborating Web Workers, with only a minimal UI layer running on the main thread. The simulation and other heavy work run in workers, keeping the UI responsive even on phones.
+Stellar Resistance is a web app that runs in both mobile and desktop browsers. It can be installed as a progressive web app and is fully playable offline once loaded, with saves stored locally. The app mostly runs in workers, with only a minimal UI layer running on the main thread.
 
 # Architecture pillars
 
-## Deterministic simulation
+## Built on the web and built for all
 
-Given the same seed and the same player inputs, the simulation always produces the same result. This makes the engine testable, bugs reproducible, and replays possible.
+The app should be responsive and accessible to reach as many users on as many devices as possible.
 
-## True state is separate from perceived state
+## Portable backend
 
-The engine owns the true game state. Each actor, including the player, maintains its own perceived state. The UI only ever receives the player's perceived state, so the true state can't leak to the player.
+The backend where the simulation is running should be able to run in a web worker on the user's device or in a node.js process on a cloud instance.
 
-## Serializable state
+## Observable
 
-The entire game state can be serialized, so it can be saved, loaded, and passed between workers. Save/load is required from the first playable version.
-
-## Data-driven content
-
-Game content is defined as data rather than code, so that modding can be supported later.
-
-## Built to scale
-
-The simulation handles hundreds of planets and thousands of population groups while staying responsive on mobile devices.
+The app should be instrumented to produce logs and metrics characterizing its behavior and performance. That observability data should be easy to view in development.
