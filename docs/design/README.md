@@ -4,9 +4,17 @@ Stellar Resistance is a grand strategy game about insurgency. You start as the l
 
 ## Design pillars
 
-- imperfect information: no actors in the game have access to the true game state. instead, each maintains its own perceived gamestate that it updates with new information as it arrives
-- emergent simulation: outcomes arise from simulated populations' grievances, loyalties, and willingness to act, not from scripted events
-- cost of escalation: violence can radicalize supporters, but it also alienates potential allies and provokes repression
+### Imperfect information
+
+No actor in the game has access to the true game state. Instead, each maintains its own perceived game state, which it updates as new information arrives.
+
+### Emergent simulation
+
+Outcomes arise from simulated populations' grievances, loyalties, and willingness to act, not from scripted events.
+
+### Cost of escalation
+
+Violence can radicalize supporters, but it also alienates potential allies and provokes repression.
 
 # Bibliography
 
