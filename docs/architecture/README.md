@@ -8,7 +8,7 @@ The app is responsive and accessible so that it reaches as many users on as many
 
 ## Portable backend
 
-The simulation backend can run either in a web worker on the user's device or in a Node.js process on a cloud instance.
+The simulation backend can run either in a web worker on the user's device or in a Node.js process.
 
 ## Observable
 
