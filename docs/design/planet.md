@@ -28,3 +28,7 @@ Creates a planet with a copy of the given regions. Throws if `regions` is empty.
 ### `createRegion(fields: Region): Region`
 
 Creates a region.
+
+### `testPlanets: readonly Planet[]`
+
+A small, hand-written set of planets for development and testing, until planets are generated programmatically.
