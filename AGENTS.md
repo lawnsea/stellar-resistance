@@ -4,10 +4,7 @@ This file provides guidance to AI coding agents working in this repository. `CLA
 
 ## Project overview
 
-Stellar Resistance is a grand strategy game about building a resistance network inside an oppressive interstellar empire. It's a pnpm monorepo:
-
-- `apps/web` — React + Vite web client
-- `packages/engine` — UI-free simulation engine, consumed as TypeScript source
+Stellar Resistance is a grand strategy game about building a resistance network inside an oppressive interstellar empire. It's a pnpm monorepo; `apps/web` holds the React + Vite web client.
 
 Docs:
 - `docs/design/README.md` — design summary and pillars, bibliography
