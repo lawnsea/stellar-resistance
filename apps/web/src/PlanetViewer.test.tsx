@@ -57,6 +57,34 @@ describe("on wide viewports", () => {
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
       .toBeVisible();
+    await expect
+      .element(screen.getByRole("option", { name: "Veyra" }))
+      .toHaveFocus();
+  });
+
+  test("clears the filter with the clear button", async () => {
+    const screen = await render(<PlanetViewer planets={planets} />);
+    const filter = screen.getByRole("searchbox", { name: "Filter planets" });
+    await expect
+      .element(screen.getByRole("button", { name: "Clear search" }))
+      .not.toBeInTheDocument();
+    await filter.fill("imb");
+    await screen.getByRole("button", { name: "Clear search" }).click();
+    await expect.element(filter).toHaveValue("");
+    await expect
+      .element(screen.getByRole("option", { name: "Veyra" }))
+      .toBeVisible();
+  });
+
+  test("clears the filter when a planet is selected", async () => {
+    const screen = await render(<PlanetViewer planets={planets} />);
+    const filter = screen.getByRole("searchbox", { name: "Filter planets" });
+    await filter.fill("imb");
+    await screen.getByRole("option", { name: "Imbrel" }).click();
+    await expect.element(filter).toHaveValue("");
+    await expect
+      .element(screen.getByRole("option", { name: "Veyra" }))
+      .toBeVisible();
   });
 });
 
@@ -74,13 +102,13 @@ describe("on narrow viewports", () => {
     await screen.getByRole("option", { name: "Imbrel" }).click();
     await expect
       .element(screen.getByRole("heading", { level: 2, name: "Imbrel" }))
-      .toBeVisible();
+      .toHaveFocus();
     await expect.element(screen.getByText("Veyra")).not.toBeVisible();
 
     await screen.getByRole("button", { name: "Back to planets" }).click();
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
-      .toBeVisible();
+      .toHaveFocus();
     await expect
       .element(screen.getByRole("heading", { level: 2 }))
       .not.toBeInTheDocument();
