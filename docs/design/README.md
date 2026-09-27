@@ -24,12 +24,6 @@ Stellar Resistance is a grand strategy game about insurgency. You start as the l
 - tactical combat: conflicts resolve abstractly
 - reflex play: the player can pause at any moment and give orders while paused
 
-## Open questions
-
-- is multiplayer ever in scope?
-- what are the exact win and loss conditions, and what does overthrowing the empire mean mechanically?
-- how much game time does one turn represent?
-
 # Bibliography
 
 - Baclagon, C. (n.d.). [Andor Through the Lens of Resistance and the Struggle for Power][cbaclagon-andor-thru-lens-of-resistance]. *Medium*.
