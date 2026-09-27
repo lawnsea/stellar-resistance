@@ -20,7 +20,7 @@ Stellar Resistance is a grand strategy game about insurgency. You start as the l
 
 # Bibliography
 
-- Baclagon, C. (n.d.). [Andor Through the Lens of Resistance and the Struggle for Power][cbaclagon-andor-thru-lens-of-resistance]. *Medium*.
+- Baclagon, C. (2025). [Andor Through the Lens of Resistance and the Struggle for Power][cbaclagon-andor-thru-lens-of-resistance]. *Medium*.
 - Clayton, G., et al. (2011). [The Method Makes the Manuscript: Key Texts in the Theoretical and Methodological Advancement of the Study of Civil War][clayton-et-al-key-texts-in-study-of-civil-war]. *Journal of Intervention and Statebuilding* 5(2).
 - Devereaux, B. (2026). [Collections: Against the State – A Primer on Terrorism, Insurgency and Protest][acoup-insurgency]. *A Collection of Unmitigated Pedantry*.
 - Kalyvas, S. N., & Kocher, M. A. (2007). [How "Free" Is Free Riding in Civil Wars? Violence, Insurgency, and the Collective Action Problem][kalyvas-kocher-collective-action-problem]. *World Politics* 59(2).
