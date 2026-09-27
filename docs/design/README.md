@@ -26,6 +26,10 @@ Outcomes arise from simulated populations' grievances, loyalties, and willingnes
 
 Violent resistance can radicalize supporters and is necessary to degrade the capability of the empire, but it also alienates potential allies and provokes repression.
 
+## Entities
+
+- [Planet](planet.md)
+
 # Bibliography
 
 - Baclagon, C. (2025). [Andor Through the Lens of Resistance and the Struggle for Power][cbaclagon-andor-thru-lens-of-resistance]. *Medium*.
