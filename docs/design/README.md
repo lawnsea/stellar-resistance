@@ -1,7 +1,5 @@
 Stellar Resistance is a grand strategy game about insurgency. You start as the leader of a single small resistance cell on one planet of an oppressive interstellar empire. By recruiting, spreading to new worlds, and allying with or absorbing other resistance groups, you try to grow that cell into a movement strong enough to overthrow the empire.
 
-Play follows a loop: gather intel, plan operations and assign cells to them, let the simulation respond, then react. Like a Paradox game, time advances in discrete turns, each a fixed span of game time, and the player pauses, resumes, and changes speed rather than ending turns. You lose if your resistance network is destroyed. The game is aimed at grand strategy players (fans of Paradox games, Dominions, and Shadow Empire).
-
 # High-level design
 
 ## Design pillars
