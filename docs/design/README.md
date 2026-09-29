@@ -28,7 +28,7 @@ Violent resistance can radicalize supporters and is necessary to degrade the cap
 
 ## Entities
 
-- [Planet](planet.md)
+See [entities](entities/README.md).
 
 # Bibliography
 

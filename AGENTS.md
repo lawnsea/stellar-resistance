@@ -11,7 +11,7 @@ Stellar Resistance is a grand strategy game about building a resistance network 
 
 Docs:
 - `docs/design/README.md` — design summary and pillars, bibliography
-- `docs/design/planet.md` — Planet entity and its API
+- `docs/design/entities/` — entity descriptions and their APIs
 - `docs/architecture/README.md` — architecture summary and pillars
 - `docs/architecture/stack.md` — tech stack
 
