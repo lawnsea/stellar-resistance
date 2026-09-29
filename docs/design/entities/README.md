@@ -3,4 +3,4 @@ The game world is made up of planets. Each planet consists of one or more region
 # Entities
 
 - [Planet](planet.md)
-- [Region](planet.md#region)
+- [Region](region.md)

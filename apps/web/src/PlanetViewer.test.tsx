@@ -9,14 +9,14 @@ const planets = [
     id: "veyra",
     name: "Veyra",
     regions: [
-      createRegion({ id: "ashfall", name: "Ashfall Basin" }),
-      createRegion({ id: "oriel", name: "Port Oriel" }),
+      createRegion({ id: "veyra-1", type: "urban" }),
+      createRegion({ id: "veyra-2", type: "rural" }),
     ],
   }),
   createPlanet({
     id: "imbrel",
     name: "Imbrel",
-    regions: [createRegion({ id: "steppe", name: "Glass Steppe" })],
+    regions: [createRegion({ id: "imbrel-1", type: "rural" })],
   }),
 ];
 
@@ -52,8 +52,8 @@ describe("on wide viewports", () => {
     await expect
       .element(screen.getByRole("heading", { level: 2, name: "Veyra" }))
       .toBeVisible();
-    await expect.element(screen.getByText("Ashfall Basin")).toBeVisible();
-    await expect.element(screen.getByText("Port Oriel")).toBeVisible();
+    await expect.element(screen.getByText("Urban")).toBeVisible();
+    await expect.element(screen.getByText("Rural")).toBeVisible();
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
       .toBeVisible();

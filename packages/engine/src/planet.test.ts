@@ -1,28 +1,19 @@
 import { describe, expect, test } from "vitest";
 import { createPlanet, createRegion } from "./index";
 
-describe("createRegion", () => {
-  test("creates a region", () => {
-    expect(createRegion({ id: "r1", name: "Lowlands" })).toEqual({
-      id: "r1",
-      name: "Lowlands",
-    });
-  });
-});
-
 describe("createPlanet", () => {
-  const lowlands = createRegion({ id: "r1", name: "Lowlands" });
+  const rural = createRegion({ id: "r1", type: "rural" });
 
   test("creates a planet with its regions", () => {
     expect(
-      createPlanet({ id: "p1", name: "Ferrix", regions: [lowlands] }),
-    ).toEqual({ id: "p1", name: "Ferrix", regions: [lowlands] });
+      createPlanet({ id: "p1", name: "Ferrix", regions: [rural] }),
+    ).toEqual({ id: "p1", name: "Ferrix", regions: [rural] });
   });
 
   test("copies the regions array", () => {
-    const regions = [lowlands];
+    const regions = [rural];
     const planet = createPlanet({ id: "p1", name: "Ferrix", regions });
-    regions.push(createRegion({ id: "r2", name: "Highlands" }));
+    regions.push(createRegion({ id: "r2", type: "urban" }));
     expect(planet.regions).toHaveLength(1);
   });
 

@@ -1,4 +1,4 @@
-import type { Planet } from "@stellar-resistance/engine";
+import type { Planet, RegionType } from "@stellar-resistance/engine";
 import { type Ref, useRef, useState } from "react";
 import {
   Button,
@@ -11,6 +11,11 @@ import {
   useFilter,
 } from "react-aria-components";
 import { flushSync } from "react-dom";
+
+const regionTypeLabels: Record<RegionType, string> = {
+  rural: "Rural",
+  urban: "Urban",
+};
 
 export function PlanetViewer({ planets }: { planets: readonly Planet[] }) {
   const [filterText, setFilterText] = useState("");
@@ -145,7 +150,7 @@ function PlanetDetails({
         </Heading>
         <ul className="mt-2 list-disc pl-5">
           {planet.regions.map((region) => (
-            <li key={region.id}>{region.name}</li>
+            <li key={region.id}>{regionTypeLabels[region.type]}</li>
           ))}
         </ul>
       </div>
