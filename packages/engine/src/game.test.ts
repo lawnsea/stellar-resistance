@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   createFaction,
   createPlanet,
@@ -74,6 +74,30 @@ describe("Game", () => {
     expect(game.tick(3).getState()).toEqual(
       game.tick().tick().tick().getState(),
     );
+  });
+});
+
+describe("tick(n) ticks each descendant once per tick", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test("Game ticks each planet n times, one tick at a time", () => {
+    const planetTick = vi.spyOn(Planet.prototype, "tick");
+    new Game({ factions: [], planets: [planet, planet] }).tick(3);
+    expect(planetTick).toHaveBeenCalledTimes(6);
+    for (const call of planetTick.mock.calls) {
+      expect(call[0] ?? 1).toBe(1);
+    }
+  });
+
+  test("Planet ticks each region n times, one tick at a time", () => {
+    const regionTick = vi.spyOn(Region.prototype, "tick");
+    new Planet(createPlanet({ ...planet, regions: [region, region] })).tick(3);
+    expect(regionTick).toHaveBeenCalledTimes(6);
+    for (const call of regionTick.mock.calls) {
+      expect(call[0] ?? 1).toBe(1);
+    }
   });
 });
 

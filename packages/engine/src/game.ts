@@ -37,12 +37,15 @@ export class Game implements Stateful<GameState>, Tickable<Game> {
   }
 
   tick(n = 1): Game {
-    return new Game(
-      {
-        factions: this._state.factions,
-        planets: this.planets.map((planet) => planet.tick(n).getState()),
-      },
-      this.config,
-    );
+    let state = this._state;
+    for (let i = 0; i < n; i++) {
+      state = {
+        factions: state.factions,
+        planets: state.planets.map((planet) =>
+          new Planet(planet, this.config).tick().getState(),
+        ),
+      };
+    }
+    return new Game(state, this.config);
   }
 }

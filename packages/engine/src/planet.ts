@@ -45,12 +45,15 @@ export class Planet implements Stateful<PlanetState>, Tickable<Planet> {
   }
 
   tick(n = 1): Planet {
-    return new Planet(
-      {
-        ...this._state,
-        regions: this.regions.map((region) => region.tick(n).getState()),
-      },
-      this.config,
-    );
+    let state = this._state;
+    for (let i = 0; i < n; i++) {
+      state = {
+        ...state,
+        regions: state.regions.map((region) =>
+          new Region(region, this.config).tick().getState(),
+        ),
+      };
+    }
+    return new Planet(state, this.config);
   }
 }

@@ -1,6 +1,6 @@
 # Game
 
-`Game` holds the engine's whole game state: its factions and its planets. The game and its entity classes keep their data as plain objects, so it can be saved or sent between web workers, and each level ticks itself: the game ticks its planets, and each planet ticks its regions.
+`Game` holds the engine's whole game state: its factions and its planets. The game and its entity classes keep their data as plain objects, so it can be saved or sent between web workers, and each level ticks itself: the game ticks its planets, and each planet ticks its regions. Each level ticks its children exactly once per tick of its own, so every tick's effects are applied in order across the whole game.
 
 ## API
 
@@ -34,7 +34,7 @@ The game's plain data.
 
 ### `class Game`
 
-Implements `Stateful<GameState>` and `Tickable<Game>`. Constructed with `new Game(state, config?)`, which copies the factions and planets arrays; `config` defaults to [`defaultConfig`](engine-config.md). Getters: `factions`, and `planets`, which returns [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` returns a new game with the same factions and each planet ticked n times.
+Implements `Stateful<GameState>` and `Tickable<Game>`. Constructed with `new Game(state, config?)`, which copies the factions and planets arrays; `config` defaults to [`defaultConfig`](engine-config.md). Getters: `factions`, and `planets`, which returns [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` returns a new game after n ticks, keeping its factions and ticking each planet once per tick.
 
 ### `testGame: Game`
 
