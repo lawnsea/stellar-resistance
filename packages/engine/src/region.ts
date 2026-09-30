@@ -49,7 +49,7 @@ export function computeRegionEconomy(
   return { production, consumption, surplus: production - consumption };
 }
 
-export function nextRegionState(
+function nextRegionState(
   region: RegionState,
   config: EngineConfig,
 ): RegionState {
