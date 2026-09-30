@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
+  birthRate,
   computeRegionEconomy,
   createPlanet,
   createPop,
   createRegion,
+  deathRate,
   defaultConfig,
   nextExpectedStandardOfLiving,
   type Planet,
@@ -136,5 +138,59 @@ describe("tick", () => {
     expect(defaultConfig.productionRate).toBeGreaterThan(1);
     const r = region([pop("a", 1000, 1)]);
     expect(computeRegionEconomy(r).surplus).toBeGreaterThan(0);
+  });
+});
+
+describe("births and deaths", () => {
+  function tickPop(p: ReturnType<typeof pop>, times = 1) {
+    let planets: readonly Planet[] = [
+      createPlanet({ id: "pl", name: "Ferrix", regions: [region([p])] }),
+    ];
+    for (let i = 0; i < times; i++) {
+      planets = tick(planets, config).planets;
+    }
+    const next = planets[0]?.regions[0]?.pops[0];
+    if (!next) throw new Error("pop missing");
+    return next;
+  }
+
+  test("births and deaths follow the previous tick's standard of living", () => {
+    // Previous actual 1.5; this tick's actual becomes 1.0.
+    const next = tickPop(pop("a", 1000, 1.5));
+    const expected =
+      1000 + (birthRate(1.5, config) - deathRate(1.5, config)) * 1000;
+    expect(next.size).toBe(Math.floor(expected));
+  });
+
+  test("a starving pop shrinks", () => {
+    expect(tickPop(pop("a", 1000, 0)).size).toBeLessThan(1000);
+  });
+
+  test("fractional births accumulate across ticks", () => {
+    // A thriving pop of 40 gains less than one person per tick.
+    const thriving = { ...config, productionRate: 1.5 };
+    const growth = (birthRate(1.5, thriving) - deathRate(1.5, thriving)) * 40;
+    expect(growth).toBeLessThan(1);
+    let planets: readonly Planet[] = [
+      createPlanet({
+        id: "pl",
+        name: "Ferrix",
+        regions: [region([pop("a", 40, 1.5)])],
+      }),
+    ];
+    for (let i = 0; i < 10; i++) {
+      planets = tick(planets, thriving).planets;
+    }
+    expect(planets[0]?.regions[0]?.pops[0]?.size).toBeGreaterThan(40);
+  });
+
+  test("size in the API is always an integer", () => {
+    const next = tickPop(pop("a", 1234, 1.3), 3);
+    expect(Number.isInteger(next.size)).toBe(true);
+  });
+
+  test("size stays between 1 and the maximum", () => {
+    expect(tickPop(pop("a", 5000, 3)).size).toBe(5000);
+    expect(tickPop(pop("a", 1, 0), 5).size).toBe(1);
   });
 });

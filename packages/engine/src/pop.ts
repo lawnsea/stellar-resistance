@@ -42,3 +42,29 @@ export function createPop(
   }
   return { id, size, actualStandardOfLiving, expectedStandardOfLiving };
 }
+
+// The engine tracks each pop's size as a float, so fractional births and
+// deaths accumulate across ticks. The API exposes only the integer part, as
+// `size`.
+interface PopState extends Pop {
+  readonly exactSize: number;
+}
+
+export function exactSize(pop: Pop): number {
+  return (pop as Partial<PopState>).exactSize ?? pop.size;
+}
+
+// Until pops can split and die out, sizes stay between 1 and the maximum.
+export function withExactSize(
+  pop: Pop,
+  size: number,
+  config: EngineConfig,
+): Pop {
+  const clamped = Math.min(config.maxPopSize, Math.max(1, size));
+  const next: PopState = {
+    ...pop,
+    size: Math.floor(clamped),
+    exactSize: clamped,
+  };
+  return next;
+}

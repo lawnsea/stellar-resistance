@@ -2,6 +2,12 @@ export interface EngineConfig {
   readonly maxPopSize: number;
   readonly productionRate: number;
   readonly expectationAdjustmentRate: number;
+  readonly baseBirthRate: number;
+  readonly baseDeathRate: number;
+  readonly prosperityResponse: number;
+  readonly prosperityCurvature: number;
+  readonly deprivationResponse: number;
+  readonly deprivationCurvature: number;
 }
 
 export const defaultConfig: EngineConfig = {
@@ -9,4 +15,10 @@ export const defaultConfig: EngineConfig = {
   // A little above 1.0, so fully provided-for pops produce a small surplus.
   productionRate: 1.05,
   expectationAdjustmentRate: 0.1,
+  baseBirthRate: 0.01,
+  baseDeathRate: 0.01,
+  prosperityResponse: 1.4,
+  prosperityCurvature: 1,
+  deprivationResponse: 4,
+  deprivationCurvature: 4,
 };

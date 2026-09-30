@@ -1,4 +1,6 @@
 import {
+  birthRate,
+  deathRate,
   type Planet,
   type RegionType,
   type TickReport,
@@ -16,22 +18,12 @@ import {
   useFilter,
 } from "react-aria-components";
 import { flushSync } from "react-dom";
+import { formatAmount, formatFraction, formatTotalAndRate } from "./format";
 
 const regionTypeLabels: Record<RegionType, string> = {
   rural: "Rural",
   urban: "Urban",
 };
-
-function formatAmount(value: number): string {
-  return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
-}
-
-function formatFraction(value: number): string {
-  return value.toLocaleString(undefined, {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2,
-  });
-}
 
 export function PlanetViewer({ planets }: { planets: readonly Planet[] }) {
   const [filterText, setFilterText] = useState("");
@@ -184,6 +176,20 @@ function PlanetDetails({
                         (standard of living: actual{" "}
                         {formatFraction(pop.actualStandardOfLiving)}, expected{" "}
                         {formatFraction(pop.expectedStandardOfLiving)})
+                      </span>
+                      <span className="text-slate-500"> · </span>
+                      <span className="text-slate-400">
+                        births{" "}
+                        {formatTotalAndRate(
+                          birthRate(pop.actualStandardOfLiving),
+                          pop.size,
+                        )}
+                        , deaths{" "}
+                        {formatTotalAndRate(
+                          deathRate(pop.actualStandardOfLiving),
+                          pop.size,
+                        )}{" "}
+                        per tick
                       </span>
                     </li>
                   ))}
