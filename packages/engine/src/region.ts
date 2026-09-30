@@ -1,7 +1,11 @@
 import { defaultConfig, type EngineConfig } from "./config";
 import { birthRate, deathRate } from "./demography";
-import { nextExpectedStandardOfLiving } from "./economy";
-import { exactSize, type Pop, withExactSize } from "./pop";
+import {
+  exactSize,
+  nextExpectedStandardOfLiving,
+  type Pop,
+  withExactSize,
+} from "./pop";
 import type { Stateful, Tickable } from "./traits";
 
 export type RegionType = "rural" | "urban";

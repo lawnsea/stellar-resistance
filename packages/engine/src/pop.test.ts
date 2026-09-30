@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { createPop, defaultConfig } from "./index";
+import {
+  createPop,
+  defaultConfig,
+  nextExpectedStandardOfLiving,
+} from "./index";
 
 const fields = {
   id: "p1",
@@ -70,4 +74,26 @@ describe("createPop", () => {
       ).toThrow("Pop p1 actual standard of living must be at least 0");
     },
   );
+});
+
+const expectationConfig = {
+  ...defaultConfig,
+  expectationAdjustmentRate: 0.5,
+};
+
+describe("nextExpectedStandardOfLiving", () => {
+  test("moves toward actual, dampened by the adjustment rate", () => {
+    expect(nextExpectedStandardOfLiving(2, 3, expectationConfig)).toBeCloseTo(
+      2.5,
+    );
+    expect(nextExpectedStandardOfLiving(2, 1.5, expectationConfig)).toBeCloseTo(
+      1.75,
+    );
+  });
+
+  test("can fall below 1.0", () => {
+    expect(
+      nextExpectedStandardOfLiving(1.2, 0.2, expectationConfig),
+    ).toBeCloseTo(0.7);
+  });
 });
