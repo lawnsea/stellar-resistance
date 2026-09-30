@@ -4,13 +4,16 @@ export {
   computeRegionEconomy,
   nextExpectedStandardOfLiving,
   type RegionEconomy,
-  type TickReport,
-  type TickResult,
-  tick,
 } from "./economy";
 export { createFaction, type Faction } from "./faction";
-export { createPlanet, type Planet } from "./planet";
+export { GameState, type GameStateData } from "./game-state";
+export { createPlanet, Planet, type PlanetState } from "./planet";
 export { createPop, type Pop, type PopFields } from "./pop";
-export { createRegion, type Region, type RegionType } from "./region";
-export { createState, type State } from "./state";
-export { testPlanets, testState } from "./test-planets";
+export {
+  createRegion,
+  Region,
+  type RegionState,
+  type RegionType,
+} from "./region";
+export { testGameState, testPlanets } from "./test-planets";
+export type { Stateful, Tickable } from "./traits";

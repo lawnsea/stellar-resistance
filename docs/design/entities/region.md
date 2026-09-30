@@ -8,7 +8,9 @@ Each tick, a region's pops produce resources in units of production, where one u
 
 Exported from `@stellar-resistance/engine`.
 
-### `Region`
+### `RegionState`
+
+A region's plain data.
 
 | Field | Type | Description |
 |---|---|---|
@@ -21,9 +23,13 @@ Exported from `@stellar-resistance/engine`.
 
 `"rural" | "urban"`
 
-### `createRegion(fields: Region): Region`
+### `createRegion(fields: RegionState): RegionState`
 
-Creates a region with a copy of the given pops. Throws if `productionCap` isn't a positive, finite number.
+Creates a region's data with a copy of the given pops. Throws if `productionCap` isn't a positive, finite number.
+
+### `class Region`
+
+Implements [`Stateful<RegionState>` and `Tickable<Region>`](../../architecture/engine/game-state.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, and `pops`. `tick(n = 1)` returns a new region after n ticks: each tick updates its pops' standards of living, births, and deaths, then splits and removes pops as described in [pops](pop.md).
 
 ## Economy API
 
@@ -37,8 +43,6 @@ Amounts are in units of production.
 | `consumption` | `number` | Total pop size |
 | `surplus` | `number` | `production` − `consumption`; negative for a deficit |
 
-### `computeRegionEconomy(region: Region, config?: EngineConfig): RegionEconomy`
+### `computeRegionEconomy(region: RegionState, config?: EngineConfig): RegionEconomy`
 
-Computes one tick of a region's economy. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
-
-Each tick's economies are reported by [`tick`](../../architecture/engine/state.md).
+Computes a region's economy for its next tick, on demand. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).

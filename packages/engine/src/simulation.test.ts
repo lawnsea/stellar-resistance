@@ -3,28 +3,22 @@ import {
   createPlanet,
   createPop,
   createRegion,
-  createState,
   defaultConfig,
+  GameState,
   type Region,
-  type State,
-  testState,
-  tick,
+  testGameState,
 } from "./index";
 import { exactSize } from "./pop";
 
-function run(state: State, ticks: number): State {
-  let current = state;
-  for (let i = 0; i < ticks; i++) {
-    current = tick(current).state;
-  }
-  return current;
+function run(state: GameState, ticks: number): GameState {
+  return state.tick(ticks);
 }
 
 function singleRegion(
   productionCap: number,
   size: number,
   actualStandardOfLiving: number,
-): State {
+): GameState {
   const planet = createPlanet({
     id: "pl",
     name: "Ferrix",
@@ -44,10 +38,10 @@ function singleRegion(
       }),
     ],
   });
-  return createState({ factions: [], planets: [planet] });
+  return new GameState({ factions: [], planets: [planet] });
 }
 
-function region(state: State, id = "r"): Region {
+function region(state: GameState, id = "r"): Region {
   const found = state.planets
     .flatMap((planet) => planet.regions)
     .find((r) => r.id === id);
@@ -105,12 +99,14 @@ describe("over many ticks", () => {
   });
 
   test("the same input produces the same result", () => {
-    expect(run(testState, 200)).toEqual(run(testState, 200));
+    expect(run(testGameState, 200).getState()).toEqual(
+      run(testGameState, 200).getState(),
+    );
   });
 });
 
 describe("the test planets over 1,000 ticks", () => {
-  const after = run(testState, 1000);
+  const after = run(testGameState, 1000);
   const pops = after.planets.flatMap((planet) =>
     planet.regions.flatMap((r) => r.pops),
   );

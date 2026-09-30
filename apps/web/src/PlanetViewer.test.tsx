@@ -2,7 +2,7 @@ import {
   createPlanet,
   createPop,
   createRegion,
-  createState,
+  GameState,
 } from "@stellar-resistance/engine";
 import { beforeEach, describe, expect, test } from "vitest";
 import { page } from "vitest/browser";
@@ -57,7 +57,7 @@ const planets = [
   }),
 ];
 
-const state = createState({ factions: [], planets });
+const state = new GameState({ factions: [], planets });
 
 describe("on wide viewports", () => {
   beforeEach(async () => {

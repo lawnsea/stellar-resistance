@@ -18,4 +18,4 @@ The app is instrumented to produce logs and metrics usefully characterizing its 
 
 ## Engine
 
-See the [state](engine/state.md) and the [engine config](engine/engine-config.md).
+See the [game state](engine/game-state.md) and the [engine config](engine/engine-config.md).

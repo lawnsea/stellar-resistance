@@ -1,11 +1,11 @@
 import {
   birthRate,
+  computeRegionEconomy,
   deathRate,
+  type GameState,
   type Planet,
+  type RegionEconomy,
   type RegionType,
-  type State,
-  type TickReport,
-  tick,
 } from "@stellar-resistance/engine";
 import { type Ref, useMemo, useRef, useState } from "react";
 import {
@@ -26,14 +26,13 @@ const regionTypeLabels: Record<RegionType, string> = {
   urban: "Urban",
 };
 
-export function PlanetViewer({ state }: { state: State }) {
-  const { planets } = state;
+export function PlanetViewer({ state }: { state: GameState }) {
+  const planets = useMemo(() => state.planets, [state]);
   const [filterText, setFilterText] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { contains } = useFilter({ sensitivity: "base" });
   const listRef = useRef<HTMLElement>(null);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
-  const tickReport = useMemo(() => tick(state).report, [state]);
 
   const visiblePlanets = planets.filter((planet) =>
     contains(planet.name, filterText),
@@ -116,7 +115,6 @@ export function PlanetViewer({ state }: { state: State }) {
         {selectedPlanet ? (
           <PlanetDetails
             planet={selectedPlanet}
-            tickReport={tickReport}
             headingRef={detailsHeadingRef}
             onBack={back}
           />
@@ -130,12 +128,10 @@ export function PlanetViewer({ state }: { state: State }) {
 
 function PlanetDetails({
   planet,
-  tickReport,
   headingRef,
   onBack,
 }: {
   planet: Planet;
-  tickReport: TickReport;
   headingRef: Ref<HTMLHeadingElement>;
   onBack: () => void;
 }) {
@@ -168,9 +164,9 @@ function PlanetDetails({
               <span className="font-medium">
                 {regionTypeLabels[region.type]}
               </span>
-              <RegionEconomy
+              <RegionStats
                 productionCap={region.productionCap}
-                economy={tickReport[region.id]}
+                economy={computeRegionEconomy(region.getState())}
               />
               {region.pops.length > 0 ? (
                 <ul className="list-[circle] pl-5 text-slate-300">
@@ -210,21 +206,19 @@ function PlanetDetails({
   );
 }
 
-function RegionEconomy({
+function RegionStats({
   productionCap,
   economy,
 }: {
   productionCap: number;
-  economy: TickReport[string] | undefined;
+  economy: RegionEconomy;
 }) {
-  const stats: [string, string][] = [["Cap", formatAmount(productionCap)]];
-  if (economy) {
-    stats.push(
-      ["Production", formatAmount(economy.production)],
-      ["Consumption", formatAmount(economy.consumption)],
-      ["Surplus", formatAmount(economy.surplus)],
-    );
-  }
+  const stats: [string, string][] = [
+    ["Cap", formatAmount(productionCap)],
+    ["Production", formatAmount(economy.production)],
+    ["Consumption", formatAmount(economy.consumption)],
+    ["Surplus", formatAmount(economy.surplus)],
+  ];
   return (
     <dl className="flex flex-wrap gap-x-4 text-sm">
       {stats.map(([label, value]) => (

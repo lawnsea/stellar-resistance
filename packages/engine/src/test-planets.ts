@@ -1,7 +1,7 @@
-import { createPlanet, type Planet } from "./planet";
+import { GameState } from "./game-state";
+import { createPlanet, type PlanetState } from "./planet";
 import { createPop } from "./pop";
-import { createRegion, type Region, type RegionType } from "./region";
-import { createState, type State } from "./state";
+import { createRegion, type RegionState, type RegionType } from "./region";
 
 // Each pop is [size, expected standard of living, actual standard of living].
 function region(
@@ -9,7 +9,7 @@ function region(
   type: RegionType,
   productionCap: number,
   pops: [number, number, number][],
-): Region {
+): RegionState {
   return createRegion({
     id,
     type,
@@ -27,7 +27,7 @@ function region(
 }
 
 // Hand-written stand-ins until planets are generated programmatically.
-export const testPlanets: readonly Planet[] = [
+export const testPlanets: readonly PlanetState[] = [
   createPlanet({
     id: "veyra",
     name: "Veyra",
@@ -98,7 +98,7 @@ export const testPlanets: readonly Planet[] = [
   }),
 ];
 
-export const testState: State = createState({
+export const testGameState = new GameState({
   factions: [],
   planets: testPlanets,
 });
