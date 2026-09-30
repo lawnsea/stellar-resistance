@@ -150,7 +150,18 @@ function PlanetDetails({
         </Heading>
         <ul className="mt-2 list-disc pl-5">
           {planet.regions.map((region) => (
-            <li key={region.id}>{regionTypeLabels[region.type]}</li>
+            <li key={region.id}>
+              <span>{regionTypeLabels[region.type]}</span>
+              {region.pops.length > 0 ? (
+                <ul className="list-[circle] pl-5 text-slate-300">
+                  {region.pops.map((pop) => (
+                    <li key={pop.id}>{pop.size.toLocaleString()} people</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="pl-5 text-slate-400">Unpopulated</p>
+              )}
+            </li>
           ))}
         </ul>
       </div>

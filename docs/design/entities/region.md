@@ -1,6 +1,6 @@
 # Region
 
-Regions are part of a planet and contain one or more pops. Regions don't have a name. Each has a type, which is rural or urban for now.
+Regions are part of a planet and contain zero or more pops; a region with no pops is unpopulated. Regions don't have a name. Each has a type, which is rural or urban for now.
 
 ## API
 
@@ -12,6 +12,7 @@ Exported from `@stellar-resistance/engine`.
 |---|---|---|
 | `id` | `string` | Unique identifier |
 | `type` | `RegionType` | The kind of region |
+| `pops` | `readonly Pop[]` | The region's [pops](pop.md); empty if unpopulated |
 
 ### `RegionType`
 
@@ -19,4 +20,4 @@ Exported from `@stellar-resistance/engine`.
 
 ### `createRegion(fields: Region): Region`
 
-Creates a region.
+Creates a region with a copy of the given pops.
