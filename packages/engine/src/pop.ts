@@ -3,8 +3,6 @@ import { defaultConfig, type EngineConfig } from "./config";
 export interface Pop {
   readonly id: string;
   readonly size: number;
-  // Share of production received last tick, relative to the pop's
-  // consumption requirement. 1.0 means the requirement was exactly met.
   readonly actualStandardOfLiving: number;
   readonly expectedStandardOfLiving: number;
 }
