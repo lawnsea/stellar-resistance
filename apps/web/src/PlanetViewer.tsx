@@ -3,6 +3,7 @@ import {
   deathRate,
   type Planet,
   type RegionType,
+  type State,
   type TickReport,
   tick,
 } from "@stellar-resistance/engine";
@@ -25,13 +26,14 @@ const regionTypeLabels: Record<RegionType, string> = {
   urban: "Urban",
 };
 
-export function PlanetViewer({ planets }: { planets: readonly Planet[] }) {
+export function PlanetViewer({ state }: { state: State }) {
+  const { planets } = state;
   const [filterText, setFilterText] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { contains } = useFilter({ sensitivity: "base" });
   const listRef = useRef<HTMLElement>(null);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
-  const tickReport = useMemo(() => tick(planets).report, [planets]);
+  const tickReport = useMemo(() => tick(state).report, [state]);
 
   const visiblePlanets = planets.filter((planet) =>
     contains(planet.name, filterText),

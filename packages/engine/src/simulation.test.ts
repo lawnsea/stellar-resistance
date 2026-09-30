@@ -3,18 +3,19 @@ import {
   createPlanet,
   createPop,
   createRegion,
+  createState,
   defaultConfig,
-  type Planet,
   type Region,
-  testPlanets,
+  type State,
+  testState,
   tick,
 } from "./index";
 import { exactSize } from "./pop";
 
-function run(planets: readonly Planet[], ticks: number): readonly Planet[] {
-  let current = planets;
+function run(state: State, ticks: number): State {
+  let current = state;
   for (let i = 0; i < ticks; i++) {
-    current = tick(current).planets;
+    current = tick(current).state;
   }
   return current;
 }
@@ -23,32 +24,31 @@ function singleRegion(
   productionCap: number,
   size: number,
   actualStandardOfLiving: number,
-): Planet[] {
-  return [
-    createPlanet({
-      id: "pl",
-      name: "Ferrix",
-      regions: [
-        createRegion({
-          id: "r",
-          type: "rural",
-          productionCap,
-          pops: [
-            createPop({
-              id: "p",
-              size,
-              actualStandardOfLiving,
-              expectedStandardOfLiving: 1,
-            }),
-          ],
-        }),
-      ],
-    }),
-  ];
+): State {
+  const planet = createPlanet({
+    id: "pl",
+    name: "Ferrix",
+    regions: [
+      createRegion({
+        id: "r",
+        type: "rural",
+        productionCap,
+        pops: [
+          createPop({
+            id: "p",
+            size,
+            actualStandardOfLiving,
+            expectedStandardOfLiving: 1,
+          }),
+        ],
+      }),
+    ],
+  });
+  return createState({ factions: [], planets: [planet] });
 }
 
-function region(planets: readonly Planet[], id = "r"): Region {
-  const found = planets
+function region(state: State, id = "r"): Region {
+  const found = state.planets
     .flatMap((planet) => planet.regions)
     .find((r) => r.id === id);
   if (!found) throw new Error(`Region ${id} missing`);
@@ -105,13 +105,15 @@ describe("over many ticks", () => {
   });
 
   test("the same input produces the same result", () => {
-    expect(run(testPlanets, 200)).toEqual(run(testPlanets, 200));
+    expect(run(testState, 200)).toEqual(run(testState, 200));
   });
 });
 
 describe("the test planets over 1,000 ticks", () => {
-  const after = run(testPlanets, 1000);
-  const pops = after.flatMap((planet) => planet.regions.flatMap((r) => r.pops));
+  const after = run(testState, 1000);
+  const pops = after.planets.flatMap((planet) =>
+    planet.regions.flatMap((r) => r.pops),
+  );
 
   test("pop sizes stay integers within the size limits", () => {
     for (const pop of pops) {

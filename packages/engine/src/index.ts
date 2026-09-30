@@ -8,7 +8,9 @@ export {
   type TickResult,
   tick,
 } from "./economy";
+export { createFaction, type Faction } from "./faction";
 export { createPlanet, type Planet } from "./planet";
 export { createPop, type Pop, type PopFields } from "./pop";
 export { createRegion, type Region, type RegionType } from "./region";
-export { testPlanets } from "./test-planets";
+export { createState, type State } from "./state";
+export { testPlanets, testState } from "./test-planets";
