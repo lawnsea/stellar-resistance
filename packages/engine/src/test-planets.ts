@@ -1,5 +1,14 @@
 import { createPlanet, type Planet } from "./planet";
-import { createRegion } from "./region";
+import { createPop } from "./pop";
+import { createRegion, type Region, type RegionType } from "./region";
+
+function region(id: string, type: RegionType, popSizes: number[]): Region {
+  return createRegion({
+    id,
+    type,
+    pops: popSizes.map((size, i) => createPop({ id: `${id}-${i + 1}`, size })),
+  });
+}
 
 // Hand-written stand-ins until planets are generated programmatically.
 export const testPlanets: readonly Planet[] = [
@@ -7,39 +16,39 @@ export const testPlanets: readonly Planet[] = [
     id: "veyra",
     name: "Veyra",
     regions: [
-      createRegion({ id: "veyra-1", type: "urban" }),
-      createRegion({ id: "veyra-2", type: "rural" }),
-      createRegion({ id: "veyra-3", type: "rural" }),
+      region("veyra-1", "urban", [5000, 4200, 3100]),
+      region("veyra-2", "rural", [800, 450]),
+      region("veyra-3", "rural", [1200]),
     ],
   }),
   createPlanet({
     id: "caddos-prime",
     name: "Caddos Prime",
     regions: [
-      createRegion({ id: "caddos-prime-1", type: "urban" }),
-      createRegion({ id: "caddos-prime-2", type: "urban" }),
+      region("caddos-prime-1", "urban", [5000, 5000, 2600]),
+      region("caddos-prime-2", "urban", [3900, 1750]),
     ],
   }),
   createPlanet({
     id: "imbrel",
     name: "Imbrel",
-    regions: [createRegion({ id: "imbrel-1", type: "rural" })],
+    regions: [region("imbrel-1", "rural", [300, 120])],
   }),
   createPlanet({
     id: "korrins-reach",
     name: "Korrin's Reach",
     regions: [
-      createRegion({ id: "korrins-reach-1", type: "rural" }),
-      createRegion({ id: "korrins-reach-2", type: "urban" }),
-      createRegion({ id: "korrins-reach-3", type: "rural" }),
+      region("korrins-reach-1", "rural", [950]),
+      region("korrins-reach-2", "urban", [2800, 1600]),
+      region("korrins-reach-3", "rural", [640, 380]),
     ],
   }),
   createPlanet({
     id: "mar-oda",
     name: "Mar Oda",
     regions: [
-      createRegion({ id: "mar-oda-1", type: "urban" }),
-      createRegion({ id: "mar-oda-2", type: "rural" }),
+      region("mar-oda-1", "urban", [3300]),
+      region("mar-oda-2", "rural", [720, 510]),
     ],
   }),
 ];

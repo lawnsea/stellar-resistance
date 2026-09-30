@@ -12,6 +12,7 @@ Exported from `@stellar-resistance/engine`.
 |---|---|---|
 | `id` | `string` | Unique identifier |
 | `type` | `RegionType` | The kind of region |
+| `pops` | `readonly Pop[]` | The region's [pops](pop.md); always at least one |
 
 ### `RegionType`
 
@@ -19,4 +20,4 @@ Exported from `@stellar-resistance/engine`.
 
 ### `createRegion(fields: Region): Region`
 
-Creates a region.
+Creates a region with a copy of the given pops. Throws if `pops` is empty.

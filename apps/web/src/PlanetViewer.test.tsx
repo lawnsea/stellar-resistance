@@ -1,4 +1,8 @@
-import { createPlanet, createRegion } from "@stellar-resistance/engine";
+import {
+  createPlanet,
+  createPop,
+  createRegion,
+} from "@stellar-resistance/engine";
 import { beforeEach, describe, expect, test } from "vitest";
 import { page } from "vitest/browser";
 import { render } from "vitest-browser-react";
@@ -9,14 +13,31 @@ const planets = [
     id: "veyra",
     name: "Veyra",
     regions: [
-      createRegion({ id: "veyra-1", type: "urban" }),
-      createRegion({ id: "veyra-2", type: "rural" }),
+      createRegion({
+        id: "veyra-1",
+        type: "urban",
+        pops: [
+          createPop({ id: "veyra-1-1", size: 4200 }),
+          createPop({ id: "veyra-1-2", size: 1500 }),
+        ],
+      }),
+      createRegion({
+        id: "veyra-2",
+        type: "rural",
+        pops: [createPop({ id: "veyra-2-1", size: 800 })],
+      }),
     ],
   }),
   createPlanet({
     id: "imbrel",
     name: "Imbrel",
-    regions: [createRegion({ id: "imbrel-1", type: "rural" })],
+    regions: [
+      createRegion({
+        id: "imbrel-1",
+        type: "rural",
+        pops: [createPop({ id: "imbrel-1-1", size: 300 })],
+      }),
+    ],
   }),
 ];
 
@@ -54,6 +75,9 @@ describe("on wide viewports", () => {
       .toBeVisible();
     await expect.element(screen.getByText("Urban")).toBeVisible();
     await expect.element(screen.getByText("Rural")).toBeVisible();
+    await expect.element(screen.getByText("4,200 people")).toBeVisible();
+    await expect.element(screen.getByText("1,500 people")).toBeVisible();
+    await expect.element(screen.getByText("800 people")).toBeVisible();
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
       .toBeVisible();
