@@ -2,7 +2,7 @@ import {
   createPlanet,
   createPop,
   createRegion,
-  createState,
+  Game,
 } from "@stellar-resistance/engine";
 import { beforeEach, describe, expect, test } from "vitest";
 import { page } from "vitest/browser";
@@ -57,7 +57,7 @@ const planets = [
   }),
 ];
 
-const state = createState({ factions: [], planets });
+const game = new Game({ factions: [], planets });
 
 describe("on wide viewports", () => {
   beforeEach(async () => {
@@ -65,7 +65,7 @@ describe("on wide viewports", () => {
   });
 
   test("lists every planet", async () => {
-    const screen = await render(<PlanetViewer state={state} />);
+    const screen = await render(<PlanetViewer game={game} />);
     await expect
       .element(screen.getByRole("option", { name: "Veyra" }))
       .toBeVisible();
@@ -75,7 +75,7 @@ describe("on wide viewports", () => {
   });
 
   test("filters planets by name", async () => {
-    const screen = await render(<PlanetViewer state={state} />);
+    const screen = await render(<PlanetViewer game={game} />);
     await screen.getByRole("searchbox", { name: "Filter planets" }).fill("imb");
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
@@ -86,7 +86,7 @@ describe("on wide viewports", () => {
   });
 
   test("shows the selected planet's details beside the list", async () => {
-    const screen = await render(<PlanetViewer state={state} />);
+    const screen = await render(<PlanetViewer game={game} />);
     await screen.getByRole("option", { name: "Veyra" }).click();
     await expect
       .element(screen.getByRole("heading", { level: 2, name: "Veyra" }))
@@ -100,7 +100,7 @@ describe("on wide viewports", () => {
   });
 
   test("shows each region's economy for one tick", async () => {
-    const screen = await render(<PlanetViewer state={state} />);
+    const screen = await render(<PlanetViewer game={game} />);
     await screen.getByRole("option", { name: "Veyra" }).click();
     // The urban region: cap 6,000; 4,200 × 1.05 + 1,500 × 1.05 × 0.6 = 5,355 units of
     // production for 5,700 people.
@@ -137,7 +137,7 @@ describe("on wide viewports", () => {
   });
 
   test("clears the filter with the clear button", async () => {
-    const screen = await render(<PlanetViewer state={state} />);
+    const screen = await render(<PlanetViewer game={game} />);
     const filter = screen.getByRole("searchbox", { name: "Filter planets" });
     await expect
       .element(screen.getByRole("button", { name: "Clear search" }))
@@ -151,7 +151,7 @@ describe("on wide viewports", () => {
   });
 
   test("clears the filter when a planet is selected", async () => {
-    const screen = await render(<PlanetViewer state={state} />);
+    const screen = await render(<PlanetViewer game={game} />);
     const filter = screen.getByRole("searchbox", { name: "Filter planets" });
     await filter.fill("imb");
     await screen.getByRole("option", { name: "Imbrel" }).click();
@@ -168,7 +168,7 @@ describe("on narrow viewports", () => {
   });
 
   test("shows details in place of the list, with a way back", async () => {
-    const screen = await render(<PlanetViewer state={state} />);
+    const screen = await render(<PlanetViewer game={game} />);
     await expect
       .element(screen.getByText("Select a planet to see its details."))
       .not.toBeVisible();

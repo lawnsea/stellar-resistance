@@ -2,8 +2,7 @@ import { defaultConfig, type EngineConfig } from "./config";
 import { birthRate, deathRate } from "./demography";
 import { splitAndRemovePops } from "./lifecycle";
 import { exactSize, withExactSize } from "./pop";
-import type { Region } from "./region";
-import type { State } from "./state";
+import type { RegionState } from "./region";
 
 export interface RegionEconomy {
   readonly production: number;
@@ -11,15 +10,8 @@ export interface RegionEconomy {
   readonly surplus: number;
 }
 
-export type TickReport = Readonly<Record<string, RegionEconomy>>;
-
-export interface TickResult {
-  readonly state: State;
-  readonly report: TickReport;
-}
-
 export function computeRegionEconomy(
-  region: Region,
+  region: RegionState,
   config: EngineConfig = defaultConfig,
 ): RegionEconomy {
   let production = 0;
@@ -42,10 +34,10 @@ export function nextExpectedStandardOfLiving(
   return expected + (actual - expected) * config.expectationAdjustmentRate;
 }
 
-function tickRegion(
-  region: Region,
+export function nextRegionState(
+  region: RegionState,
   config: EngineConfig,
-): { region: Region; economy: RegionEconomy } {
+): RegionState {
   const economy = computeRegionEconomy(region, config);
   const actual =
     economy.consumption > 0 ? economy.production / economy.consumption : 0;
@@ -67,24 +59,5 @@ function tickRegion(
       size + births - deaths,
     );
   });
-  return { region: { ...region, pops }, economy };
-}
-
-export function tick(
-  state: State,
-  config: EngineConfig = defaultConfig,
-): TickResult {
-  const report: Record<string, RegionEconomy> = {};
-  const nextPlanets = state.planets.map((planet) => ({
-    ...planet,
-    regions: planet.regions.map((region) => {
-      const next = tickRegion(region, config);
-      report[region.id] = next.economy;
-      return next.region;
-    }),
-  }));
-  return {
-    state: { ...state, planets: splitAndRemovePops(nextPlanets, config) },
-    report,
-  };
+  return { ...region, pops: splitAndRemovePops(pops, config) };
 }
