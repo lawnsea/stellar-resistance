@@ -1,8 +1,8 @@
 # Region
 
-Regions are part of a planet and contain zero or more pops; a region with no pops is unpopulated. Regions don't have a name. Each has a type, which is rural or urban for now, and a productivity factor, greater than 0.0 and at most 1.0.
+Regions are part of a planet and contain zero or more pops; a region with no pops is unpopulated. Regions don't have a name. Each has a type, which is rural or urban for now.
 
-Each tick, a region produces resources in proportion to the total size of its pops, multiplied by its productivity. Its pops consume resources in proportion to their size and expected standard of living. The difference is the region's surplus.
+Each tick, a region's pops produce resources in units of production, where one unit meets one person's consumption requirement for a tick. Each pop produces its size × the production rate × its actual standard of living from the previous tick, capped at 1.0, so underfed pops produce less. The region's production is split among its pops by size, which sets their new actual standard of living.
 
 ## API
 
@@ -14,7 +14,6 @@ Exported from `@stellar-resistance/engine`.
 |---|---|---|
 | `id` | `string` | Unique identifier |
 | `type` | `RegionType` | The kind of region |
-| `productivity` | `number` | In (0.0, 1.0]; scales the region's production |
 | `pops` | `readonly Pop[]` | The region's [pops](pop.md); empty if unpopulated |
 
 ### `RegionType`
@@ -23,22 +22,24 @@ Exported from `@stellar-resistance/engine`.
 
 ### `createRegion(fields: Region): Region`
 
-Creates a region with a copy of the given pops. Throws if `productivity` isn't in (0.0, 1.0].
+Creates a region with a copy of the given pops.
 
 ## Economy API
 
 ### `RegionEconomy`
 
+Amounts are in units of production.
+
 | Field | Type | Description |
 |---|---|---|
-| `production` | `number` | total pop size × `productivity` × [`productionRate`](../../architecture/engine/engine-config.md) |
-| `consumption` | `number` | Σ (pop size × `expectedStandardOfLiving`) × [`consumptionRate`](../../architecture/engine/engine-config.md) |
-| `surplus` | `number` | `production` − `consumption` |
+| `production` | `number` | Σ (pop size × [`productionRate`](../../architecture/engine/engine-config.md) × min(1, `actualStandardOfLiving`)) |
+| `consumption` | `number` | Total pop size |
+| `surplus` | `number` | `production` − `consumption`; negative for a deficit |
 
 ### `computeRegionEconomy(region: Region, config?: EngineConfig): RegionEconomy`
 
 Computes one tick of a region's economy. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
 
-### `tick(planets: readonly Planet[], config?: EngineConfig): TickReport`
+### `tick(planets: readonly Planet[], config?: EngineConfig): TickResult`
 
-Advances the simulation one tick and reports each region's economy, keyed by region id. It doesn't change the planets.
+Advances the simulation one tick. Returns `{ planets, report }`: the planets with each pop's actual and expected standard of living updated, and each region's economy keyed by region id. It doesn't change its input.

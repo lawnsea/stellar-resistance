@@ -1,33 +1,44 @@
 import { defaultConfig, type EngineConfig } from "./config";
-import { isFraction } from "./fraction";
 
 export interface Pop {
   readonly id: string;
   readonly size: number;
+  // Share of production received last tick, relative to the pop's
+  // consumption requirement. 1.0 means the requirement was exactly met.
+  readonly actualStandardOfLiving: number;
   readonly expectedStandardOfLiving: number;
 }
 
+export interface PopFields extends Omit<Pop, "actualStandardOfLiving"> {
+  readonly actualStandardOfLiving?: number;
+}
+
 export function createPop(
-  fields: Pop,
+  fields: PopFields,
   config: EngineConfig = defaultConfig,
 ): Pop {
+  const { id, size, expectedStandardOfLiving } = fields;
+  const actualStandardOfLiving = fields.actualStandardOfLiving ?? 1;
+  if (!Number.isInteger(size) || size < 1 || size > config.maxPopSize) {
+    throw new Error(
+      `Pop ${id} size must be an integer from 1 to ${config.maxPopSize}, got ${size}`,
+    );
+  }
   if (
-    !Number.isInteger(fields.size) ||
-    fields.size < 1 ||
-    fields.size > config.maxPopSize
+    !(actualStandardOfLiving >= 0) ||
+    !Number.isFinite(actualStandardOfLiving)
   ) {
     throw new Error(
-      `Pop ${fields.id} size must be an integer from 1 to ${config.maxPopSize}, got ${fields.size}`,
+      `Pop ${id} actual standard of living must be at least 0, got ${actualStandardOfLiving}`,
     );
   }
-  if (!isFraction(fields.expectedStandardOfLiving)) {
+  if (
+    !(expectedStandardOfLiving >= 1) ||
+    !Number.isFinite(expectedStandardOfLiving)
+  ) {
     throw new Error(
-      `Pop ${fields.id} expected standard of living must be in (0, 1], got ${fields.expectedStandardOfLiving}`,
+      `Pop ${id} expected standard of living must be at least 1, got ${expectedStandardOfLiving}`,
     );
   }
-  return {
-    id: fields.id,
-    size: fields.size,
-    expectedStandardOfLiving: fields.expectedStandardOfLiving,
-  };
+  return { id, size, actualStandardOfLiving, expectedStandardOfLiving };
 }

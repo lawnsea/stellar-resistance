@@ -5,42 +5,53 @@ import {
   createPop,
   createRegion,
   defaultConfig,
-  testPlanets,
+  nextExpectedStandardOfLiving,
   tick,
 } from "./index";
 
-const region = createRegion({
-  id: "r1",
-  type: "urban",
-  productivity: 0.8,
-  pops: [
-    createPop({ id: "p1", size: 1000, expectedStandardOfLiving: 0.5 }),
-    createPop({ id: "p2", size: 3000, expectedStandardOfLiving: 0.7 }),
-  ],
-});
+const config = {
+  ...defaultConfig,
+  productionRate: 1,
+  expectationAdjustmentRate: 0.5,
+};
+
+function pop(id: string, size: number, actual = 1, expected = 1) {
+  return createPop({
+    id,
+    size,
+    actualStandardOfLiving: actual,
+    expectedStandardOfLiving: expected,
+  });
+}
+
+function region(pops: ReturnType<typeof pop>[]) {
+  return createRegion({ id: "r1", type: "urban", pops });
+}
 
 describe("computeRegionEconomy", () => {
-  test("production is total pop size times productivity times the rate", () => {
-    const config = { ...defaultConfig, productionRate: 2 };
-    expect(computeRegionEconomy(region, config).production).toBeCloseTo(
-      4000 * 0.8 * 2,
-    );
+  test("production is the sum of size × rate × min(1, actual standard of living)", () => {
+    const r = region([pop("a", 1000, 0.5), pop("b", 3000, 1.5)]);
+    expect(
+      computeRegionEconomy(r, { ...config, productionRate: 2 }).production,
+    ).toBeCloseTo(1000 * 2 * 0.5 + 3000 * 2 * 1);
   });
 
-  test("consumption is pop size times standard of living times the rate", () => {
-    const config = { ...defaultConfig, consumptionRate: 0.5 };
-    expect(computeRegionEconomy(region, config).consumption).toBeCloseTo(
-      (1000 * 0.5 + 3000 * 0.7) * 0.5,
-    );
+  test("consumption is one unit per person", () => {
+    const r = region([pop("a", 1000), pop("b", 3000)]);
+    expect(computeRegionEconomy(r, config).consumption).toBe(4000);
   });
 
   test("surplus is production minus consumption", () => {
-    const { production, consumption, surplus } = computeRegionEconomy(region);
+    const r = region([pop("a", 1000, 0.8)]);
+    const { production, consumption, surplus } = computeRegionEconomy(
+      r,
+      config,
+    );
     expect(surplus).toBeCloseTo(production - consumption);
   });
 
   test("an unpopulated region produces and consumes nothing", () => {
-    expect(computeRegionEconomy({ ...region, pops: [] })).toEqual({
+    expect(computeRegionEconomy(region([]), config)).toEqual({
       production: 0,
       consumption: 0,
       surplus: 0,
@@ -48,30 +59,68 @@ describe("computeRegionEconomy", () => {
   });
 });
 
+describe("nextExpectedStandardOfLiving", () => {
+  test("moves toward actual, dampened by the adjustment rate", () => {
+    expect(nextExpectedStandardOfLiving(2, 3, config)).toBeCloseTo(2.5);
+    expect(nextExpectedStandardOfLiving(2, 1.5, config)).toBeCloseTo(1.75);
+  });
+
+  test("never falls below 1.0", () => {
+    expect(nextExpectedStandardOfLiving(1.2, 0.2, config)).toBe(1);
+  });
+});
+
 describe("tick", () => {
-  test("reports every region's economy", () => {
-    const planet = createPlanet({
-      id: "pl1",
-      name: "Ferrix",
-      regions: [region],
-    });
-    expect(tick([planet])).toEqual({ r1: computeRegionEconomy(region) });
+  test("splits production among pops by size", () => {
+    // Production: 1000 × 0.5 + 3000 × 1 = 3500 units for 4000 people.
+    const r = region([pop("a", 1000, 0.5), pop("b", 3000, 1)]);
+    const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
+    const [next] = tick([planet], config).planets;
+    const [a, b] = next?.regions[0]?.pops ?? [];
+    expect(a?.actualStandardOfLiving).toBeCloseTo(3500 / 4000);
+    expect(b?.actualStandardOfLiving).toBeCloseTo(3500 / 4000);
   });
 
-  test("every populated test region has a surplus", () => {
-    const report = tick(testPlanets);
-    for (const planet of testPlanets) {
-      for (const r of planet.regions) {
-        if (r.pops.length > 0) {
-          expect(report[r.id]?.surplus, r.id).toBeGreaterThan(0);
-        }
-      }
-    }
-  });
-
-  test("consumption is set a little less than production", () => {
-    expect(defaultConfig.consumptionRate).toBeLessThan(
-      defaultConfig.productionRate,
+  test("a pop of 500 whose share is 500 units has an actual standard of living of 1.0", () => {
+    const r = region([pop("a", 500, 1)]);
+    const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
+    const result = tick([planet], config);
+    expect(result.report.r1?.production).toBe(500);
+    expect(result.planets[0]?.regions[0]?.pops[0]?.actualStandardOfLiving).toBe(
+      1,
     );
+  });
+
+  test("updates expected standard of living toward the new actual", () => {
+    const r = region([pop("a", 1000, 1, 2)]);
+    const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
+    const next = tick([planet], { ...config, productionRate: 1.5 }).planets;
+    // Actual becomes 1.5; expected moves halfway from 2 toward 1.5.
+    expect(next[0]?.regions[0]?.pops[0]?.expectedStandardOfLiving).toBeCloseTo(
+      1.75,
+    );
+  });
+
+  test("reports each region's economy", () => {
+    const r = region([pop("a", 1000, 0.8)]);
+    const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
+    expect(tick([planet], config).report).toEqual({
+      r1: computeRegionEconomy(r, config),
+    });
+  });
+
+  test("doesn't mutate its input", () => {
+    const r = region([pop("a", 1000, 0.5, 2)]);
+    const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
+    const snapshot = JSON.parse(JSON.stringify(planet));
+    const result = tick([planet], config);
+    expect(planet).toEqual(snapshot);
+    expect(result.planets[0]).not.toBe(planet);
+  });
+
+  test("pops fully provided for run a surplus at the default production rate", () => {
+    expect(defaultConfig.productionRate).toBeGreaterThan(1);
+    const r = region([pop("a", 1000, 1)]);
+    expect(computeRegionEconomy(r).surplus).toBeGreaterThan(0);
   });
 });

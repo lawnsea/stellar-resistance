@@ -2,12 +2,7 @@ import { describe, expect, test } from "vitest";
 import { createPlanet, createRegion } from "./index";
 
 describe("createPlanet", () => {
-  const rural = createRegion({
-    id: "r1",
-    type: "rural",
-    productivity: 0.6,
-    pops: [],
-  });
+  const rural = createRegion({ id: "r1", type: "rural", pops: [] });
 
   test("creates a planet with its regions", () => {
     expect(
@@ -18,9 +13,7 @@ describe("createPlanet", () => {
   test("copies the regions array", () => {
     const regions = [rural];
     const planet = createPlanet({ id: "p1", name: "Ferrix", regions });
-    regions.push(
-      createRegion({ id: "r2", type: "urban", productivity: 0.9, pops: [] }),
-    );
+    regions.push(createRegion({ id: "r2", type: "urban", pops: [] }));
     expect(planet.regions).toHaveLength(1);
   });
 

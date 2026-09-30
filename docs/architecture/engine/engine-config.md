@@ -11,13 +11,13 @@ Exported from `@stellar-resistance/engine`.
 | Field | Type | Description |
 |---|---|---|
 | `maxPopSize` | `number` | The largest allowed [pop](../../design/entities/pop.md) size |
-| `productionRate` | `number` | Resources a [region](../../design/entities/region.md) produces per person at productivity 1.0 |
-| `consumptionRate` | `number` | Resources a [pop](../../design/entities/pop.md) consumes per person at expected standard of living 1.0 |
+| `productionRate` | `number` | Units of production per person per tick for a fully provided-for pop; see [regions](../../design/entities/region.md) |
+| `expectationAdjustmentRate` | `number` | In (0.0, 1.0]; how far a [pop](../../design/entities/pop.md)'s expected standard of living moves toward its actual standard of living each tick |
 
 ### `defaultConfig: EngineConfig`
 
 | Field | Value | Why |
 |---|---|---|
 | `maxPopSize` | `5000` | Starting value |
-| `productionRate` | `1.0` | Starting value |
-| `consumptionRate` | `0.9` | A little below `productionRate`, so regions run a surplus |
+| `productionRate` | `1.05` | A little above 1.0, so fully provided-for pops produce a small surplus |
+| `expectationAdjustmentRate` | `0.1` | Starting value |
