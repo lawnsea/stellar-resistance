@@ -11,21 +11,9 @@ Exported from `@stellar-resistance/engine`.
 | Field | Type | Description |
 |---|---|---|
 | `id` | `string` | Unique identifier |
-| `size` | `number` | Number of people; an integer from 1 to `maxPopSize` |
+| `size` | `number` | Number of people; an integer from 1 to [`maxPopSize`](../engine-config.md) |
 | `expectedStandardOfLiving` | `number` | In (0.0, 1.0]; scales the pop's consumption |
 
 ### `createPop(fields: Pop, config?: EngineConfig): Pop`
 
-Creates a pop. Throws if `size` isn't an integer from 1 to `config.maxPopSize`, or if `expectedStandardOfLiving` isn't in (0.0, 1.0]. `config` defaults to `defaultConfig`.
-
-### `EngineConfig`
-
-| Field | Type | Description |
-|---|---|---|
-| `maxPopSize` | `number` | The largest allowed pop size |
-| `productionRate` | `number` | Resources produced per person at productivity 1.0 |
-| `consumptionRate` | `number` | Resources consumed per person at standard of living 1.0 |
-
-### `defaultConfig: EngineConfig`
-
-The global configuration: `{ maxPopSize: 5000, productionRate: 1.0, consumptionRate: 0.9 }`. Consumption is set a little below production so regions run a surplus; the rates will be tuned later.
+Creates a pop. Throws if `size` isn't an integer from 1 to `config.maxPopSize`, or if `expectedStandardOfLiving` isn't in (0.0, 1.0]. `config` defaults to [`defaultConfig`](../engine-config.md).

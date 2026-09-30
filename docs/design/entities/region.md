@@ -31,13 +31,13 @@ Creates a region with a copy of the given pops. Throws if `productivity` isn't i
 
 | Field | Type | Description |
 |---|---|---|
-| `production` | `number` | total pop size × `productivity` × `productionRate` |
-| `consumption` | `number` | Σ (pop size × `expectedStandardOfLiving`) × `consumptionRate` |
+| `production` | `number` | total pop size × `productivity` × [`productionRate`](../engine-config.md) |
+| `consumption` | `number` | Σ (pop size × `expectedStandardOfLiving`) × [`consumptionRate`](../engine-config.md) |
 | `surplus` | `number` | `production` − `consumption` |
 
 ### `computeRegionEconomy(region: Region, config?: EngineConfig): RegionEconomy`
 
-Computes one tick of a region's economy. `config` defaults to `defaultConfig`.
+Computes one tick of a region's economy. `config` defaults to [`defaultConfig`](../engine-config.md).
 
 ### `tick(planets: readonly Planet[], config?: EngineConfig): TickReport`
 
