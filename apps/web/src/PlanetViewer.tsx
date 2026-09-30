@@ -1,4 +1,6 @@
 import {
+  birthRate,
+  deathRate,
   type Planet,
   type RegionType,
   type TickReport,
@@ -24,6 +26,14 @@ const regionTypeLabels: Record<RegionType, string> = {
 
 function formatAmount(value: number): string {
   return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function formatRate(value: number): string {
+  return value.toLocaleString(undefined, {
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function formatFraction(value: number): string {
@@ -184,6 +194,14 @@ function PlanetDetails({
                         (standard of living: actual{" "}
                         {formatFraction(pop.actualStandardOfLiving)}, expected{" "}
                         {formatFraction(pop.expectedStandardOfLiving)})
+                      </span>
+                      <span className="text-slate-500"> · </span>
+                      <span className="text-slate-400">
+                        births{" "}
+                        {formatRate(birthRate(pop.actualStandardOfLiving))},
+                        deaths{" "}
+                        {formatRate(deathRate(pop.actualStandardOfLiving))} per
+                        tick
                       </span>
                     </li>
                   ))}

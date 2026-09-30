@@ -107,6 +107,11 @@ describe("on wide viewports", () => {
         screen.getByText("(standard of living: actual 0.6, expected 1.0)"),
       )
       .toBeVisible();
+    // At an actual standard of living of 0.6, the default curves give a birth
+    // rate of 0.41% and a death rate of 3.37% per tick.
+    await expect
+      .element(screen.getByText("births 0.41%, deaths 3.37% per tick"))
+      .toBeVisible();
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
       .toBeVisible();

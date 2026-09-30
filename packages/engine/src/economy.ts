@@ -1,6 +1,7 @@
 import { defaultConfig, type EngineConfig } from "./config";
+import { birthRate, deathRate } from "./demography";
 import type { Planet } from "./planet";
-import type { Pop } from "./pop";
+import { exactSize, withExactSize } from "./pop";
 import type { Region } from "./region";
 
 // Amounts are in units of production. One unit meets one person's
@@ -26,11 +27,10 @@ export function computeRegionEconomy(
   let production = 0;
   let consumption = 0;
   for (const pop of region.pops) {
+    const size = exactSize(pop);
     production +=
-      pop.size *
-      config.productionRate *
-      Math.min(1, pop.actualStandardOfLiving);
-    consumption += pop.size;
+      size * config.productionRate * Math.min(1, pop.actualStandardOfLiving);
+    consumption += size;
   }
   return { production, consumption, surplus: production - consumption };
 }
@@ -52,17 +52,27 @@ function tickRegion(
   // the same share per person.
   const actual =
     economy.consumption > 0 ? economy.production / economy.consumption : 0;
-  const pops = region.pops.map(
-    (pop): Pop => ({
-      ...pop,
-      actualStandardOfLiving: actual,
-      expectedStandardOfLiving: nextExpectedStandardOfLiving(
-        pop.expectedStandardOfLiving,
-        actual,
-        config,
-      ),
-    }),
-  );
+  const pops = region.pops.map((pop) => {
+    // Births and deaths follow the standard of living from the previous tick,
+    // like production does.
+    const size = exactSize(pop);
+    const previous = pop.actualStandardOfLiving;
+    const births = birthRate(previous, config) * size;
+    const deaths = deathRate(previous, config) * size;
+    return withExactSize(
+      {
+        ...pop,
+        actualStandardOfLiving: actual,
+        expectedStandardOfLiving: nextExpectedStandardOfLiving(
+          pop.expectedStandardOfLiving,
+          actual,
+          config,
+        ),
+      },
+      size + births - deaths,
+      config,
+    );
+  });
   return { region: { ...region, pops }, economy };
 }
 

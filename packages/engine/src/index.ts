@@ -1,4 +1,5 @@
 export { defaultConfig, type EngineConfig } from "./config";
+export { birthRate, deathRate } from "./demography";
 export {
   computeRegionEconomy,
   nextExpectedStandardOfLiving,
