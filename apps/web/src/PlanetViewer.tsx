@@ -166,7 +166,10 @@ function PlanetDetails({
               <span className="font-medium">
                 {regionTypeLabels[region.type]}
               </span>
-              <RegionEconomy economy={tickReport[region.id]} />
+              <RegionEconomy
+                productionCap={region.productionCap}
+                economy={tickReport[region.id]}
+              />
               {region.pops.length > 0 ? (
                 <ul className="list-[circle] pl-5 text-slate-300">
                   {region.pops.map((pop) => (
@@ -206,16 +209,20 @@ function PlanetDetails({
 }
 
 function RegionEconomy({
+  productionCap,
   economy,
 }: {
+  productionCap: number;
   economy: TickReport[string] | undefined;
 }) {
-  if (!economy) return null;
-  const stats: [string, string][] = [
-    ["Production", formatAmount(economy.production)],
-    ["Consumption", formatAmount(economy.consumption)],
-    ["Surplus", formatAmount(economy.surplus)],
-  ];
+  const stats: [string, string][] = [["Cap", formatAmount(productionCap)]];
+  if (economy) {
+    stats.push(
+      ["Production", formatAmount(economy.production)],
+      ["Consumption", formatAmount(economy.consumption)],
+      ["Surplus", formatAmount(economy.surplus)],
+    );
+  }
   return (
     <dl className="flex flex-wrap gap-x-4 text-sm">
       {stats.map(([label, value]) => (

@@ -22,7 +22,9 @@ function planetWith(pops: Pop[]): Planet {
   return createPlanet({
     id: "pl",
     name: "Ferrix",
-    regions: [createRegion({ id: "r1", type: "urban", pops })],
+    regions: [
+      createRegion({ id: "r1", type: "urban", productionCap: 1e9, pops }),
+    ],
   });
 }
 

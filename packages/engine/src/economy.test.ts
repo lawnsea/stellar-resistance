@@ -27,8 +27,8 @@ function pop(id: string, size: number, actual = 1, expected = 1) {
   });
 }
 
-function region(pops: ReturnType<typeof pop>[]) {
-  return createRegion({ id: "r1", type: "urban", pops });
+function region(pops: ReturnType<typeof pop>[], productionCap = 1e9) {
+  return createRegion({ id: "r1", type: "urban", productionCap, pops });
 }
 
 describe("computeRegionEconomy", () => {
@@ -51,6 +51,19 @@ describe("computeRegionEconomy", () => {
       config,
     );
     expect(surplus).toBeCloseTo(production - consumption);
+  });
+
+  test("production never exceeds the region's cap", () => {
+    // Uncapped: 1000 × 1 × 1 = 1000 units.
+    const r = region([pop("a", 1000, 1)], 800);
+    const economy = computeRegionEconomy(r, config);
+    expect(economy.production).toBe(800);
+    expect(economy.surplus).toBe(800 - 1000);
+  });
+
+  test("production below the cap is unaffected", () => {
+    const r = region([pop("a", 1000, 1)], 1200);
+    expect(computeRegionEconomy(r, config).production).toBe(1000);
   });
 
   test("an unpopulated region produces and consumes nothing", () => {
@@ -123,6 +136,13 @@ describe("tick", () => {
     expect(tick([planet], config).report).toEqual({
       r1: computeRegionEconomy(r, config),
     });
+  });
+
+  test("a capped region's pops get the capped share", () => {
+    const r = region([pop("a", 1000, 1)], 800);
+    const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
+    const [next] = tick([planet], config).planets;
+    expect(next?.regions[0]?.pops[0]?.actualStandardOfLiving).toBeCloseTo(0.8);
   });
 
   test("doesn't mutate its input", () => {

@@ -25,14 +25,21 @@ const planets = [
       createRegion({
         id: "veyra-1",
         type: "urban",
+        productionCap: 6000,
         pops: [pop("veyra-1-1", 4200, 1, 1.2), pop("veyra-1-2", 1500, 0.6, 1)],
       }),
       createRegion({
         id: "veyra-2",
         type: "rural",
+        productionCap: 700,
         pops: [pop("veyra-2-1", 800, 1, 1.1)],
       }),
-      createRegion({ id: "veyra-3", type: "rural", pops: [] }),
+      createRegion({
+        id: "veyra-3",
+        type: "rural",
+        productionCap: 500,
+        pops: [],
+      }),
     ],
   }),
   createPlanet({
@@ -42,6 +49,7 @@ const planets = [
       createRegion({
         id: "imbrel-1",
         type: "rural",
+        productionCap: 1000,
         pops: [pop("imbrel-1-1", 300, 1, 1)],
       }),
     ],
@@ -91,8 +99,11 @@ describe("on wide viewports", () => {
   test("shows each region's economy for one tick", async () => {
     const screen = await render(<PlanetViewer planets={planets} />);
     await screen.getByRole("option", { name: "Veyra" }).click();
-    // The urban region: 4,200 × 1.05 + 1,500 × 1.05 × 0.6 = 5,355 units of
+    // The urban region: cap 6,000; 4,200 × 1.05 + 1,500 × 1.05 × 0.6 = 5,355 units of
     // production for 5,700 people.
+    await expect
+      .element(screen.getByText("6,000", { exact: true }))
+      .toBeVisible();
     await expect
       .element(screen.getByText("5,355", { exact: true }))
       .toBeVisible();
