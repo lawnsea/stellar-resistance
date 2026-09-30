@@ -39,7 +39,7 @@ export function PlanetViewer({ planets }: { planets: readonly Planet[] }) {
   const { contains } = useFilter({ sensitivity: "base" });
   const listRef = useRef<HTMLElement>(null);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
-  const tickReport = useMemo(() => tick(planets), [planets]);
+  const tickReport = useMemo(() => tick(planets).report, [planets]);
 
   const visiblePlanets = planets.filter((planet) =>
     contains(planet.name, filterText),
@@ -174,17 +174,15 @@ function PlanetDetails({
               <span className="font-medium">
                 {regionTypeLabels[region.type]}
               </span>
-              <RegionEconomy
-                productivity={region.productivity}
-                economy={tickReport[region.id]}
-              />
+              <RegionEconomy economy={tickReport[region.id]} />
               {region.pops.length > 0 ? (
                 <ul className="list-[circle] pl-5 text-slate-300">
                   {region.pops.map((pop) => (
                     <li key={pop.id}>
                       <span>{formatAmount(pop.size)} people</span>{" "}
                       <span className="text-slate-400">
-                        (expected standard of living{" "}
+                        (standard of living: actual{" "}
+                        {formatFraction(pop.actualStandardOfLiving)}, expected{" "}
                         {formatFraction(pop.expectedStandardOfLiving)})
                       </span>
                     </li>
@@ -202,22 +200,16 @@ function PlanetDetails({
 }
 
 function RegionEconomy({
-  productivity,
   economy,
 }: {
-  productivity: number;
   economy: TickReport[string] | undefined;
 }) {
+  if (!economy) return null;
   const stats: [string, string][] = [
-    ["Productivity", formatFraction(productivity)],
+    ["Production", formatAmount(economy.production)],
+    ["Consumption", formatAmount(economy.consumption)],
+    ["Surplus", formatAmount(economy.surplus)],
   ];
-  if (economy) {
-    stats.push(
-      ["Production", formatAmount(economy.production)],
-      ["Consumption", formatAmount(economy.consumption)],
-      ["Surplus", formatAmount(economy.surplus)],
-    );
-  }
   return (
     <dl className="flex flex-wrap gap-x-4 text-sm">
       {stats.map(([label, value]) => (

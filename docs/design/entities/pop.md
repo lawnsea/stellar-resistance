@@ -1,6 +1,6 @@
 # Pop
 
-Pops are groups of people who live in a region. Each pop has a size between 1 and a globally configurable maximum, which starts at 5000. Each pop also has an expected standard of living, greater than 0.0 and at most 1.0, which sets how much it consumes.
+Pops are groups of people who live in a region. Each pop has a size between 1 and a globally configurable maximum, which starts at 5000. Each person needs one unit of production per tick. A pop's actual standard of living is the share of that requirement it received last tick; 1.0 means the requirement was exactly met. Its expected standard of living is at least 0.0, and each tick it moves toward the actual standard of living, dampened by a configurable rate, so a pop that starves for long enough comes to expect starvation.
 
 ## API
 
@@ -12,8 +12,13 @@ Exported from `@stellar-resistance/engine`.
 |---|---|---|
 | `id` | `string` | Unique identifier |
 | `size` | `number` | Number of people; an integer from 1 to [`maxPopSize`](../../architecture/engine/engine-config.md) |
-| `expectedStandardOfLiving` | `number` | In (0.0, 1.0]; scales the pop's consumption |
+| `actualStandardOfLiving` | `number` | Share of production received last tick ÷ size; at least 0.0 |
+| `expectedStandardOfLiving` | `number` | At least 0.0 |
 
-### `createPop(fields: Pop, config?: EngineConfig): Pop`
+### `createPop(fields: PopFields, config?: EngineConfig): Pop`
 
-Creates a pop. Throws if `size` isn't an integer from 1 to `config.maxPopSize`, or if `expectedStandardOfLiving` isn't in (0.0, 1.0]. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
+Creates a pop. `PopFields` is `Pop` with `actualStandardOfLiving` optional; it defaults to 1.0. Throws if `size` isn't an integer from 1 to `config.maxPopSize`, if `actualStandardOfLiving` is below 0.0, or if `expectedStandardOfLiving` is below 0.0. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
+
+### `nextExpectedStandardOfLiving(expected: number, actual: number, config?: EngineConfig): number`
+
+Returns `expected + (actual − expected) × expectationAdjustmentRate`.

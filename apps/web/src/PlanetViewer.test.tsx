@@ -8,6 +8,15 @@ import { page } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { PlanetViewer } from "./PlanetViewer";
 
+function pop(id: string, size: number, actual: number, expected: number) {
+  return createPop({
+    id,
+    size,
+    actualStandardOfLiving: actual,
+    expectedStandardOfLiving: expected,
+  });
+}
+
 const planets = [
   createPlanet({
     id: "veyra",
@@ -16,38 +25,14 @@ const planets = [
       createRegion({
         id: "veyra-1",
         type: "urban",
-        productivity: 1,
-        pops: [
-          createPop({
-            id: "veyra-1-1",
-            size: 4200,
-            expectedStandardOfLiving: 0.5,
-          }),
-          createPop({
-            id: "veyra-1-2",
-            size: 1500,
-            expectedStandardOfLiving: 0.2,
-          }),
-        ],
+        pops: [pop("veyra-1-1", 4200, 1, 1.2), pop("veyra-1-2", 1500, 0.6, 1)],
       }),
       createRegion({
         id: "veyra-2",
         type: "rural",
-        productivity: 0.6,
-        pops: [
-          createPop({
-            id: "veyra-2-1",
-            size: 800,
-            expectedStandardOfLiving: 0.5,
-          }),
-        ],
+        pops: [pop("veyra-2-1", 800, 1, 1.1)],
       }),
-      createRegion({
-        id: "veyra-3",
-        type: "rural",
-        productivity: 0.6,
-        pops: [],
-      }),
+      createRegion({ id: "veyra-3", type: "rural", pops: [] }),
     ],
   }),
   createPlanet({
@@ -57,14 +42,7 @@ const planets = [
       createRegion({
         id: "imbrel-1",
         type: "rural",
-        productivity: 0.6,
-        pops: [
-          createPop({
-            id: "imbrel-1-1",
-            size: 300,
-            expectedStandardOfLiving: 0.5,
-          }),
-        ],
+        pops: [pop("imbrel-1-1", 300, 1, 1)],
       }),
     ],
   }),
@@ -113,21 +91,21 @@ describe("on wide viewports", () => {
   test("shows each region's economy for one tick", async () => {
     const screen = await render(<PlanetViewer planets={planets} />);
     await screen.getByRole("option", { name: "Veyra" }).click();
-    // The urban region: productivity 1.0, 5,700 people.
+    // The urban region: 4,200 × 1.05 + 1,500 × 1.05 × 0.6 = 5,355 units of
+    // production for 5,700 people.
     await expect
-      .element(screen.getByText("1.0", { exact: true }))
+      .element(screen.getByText("5,355", { exact: true }))
       .toBeVisible();
     await expect
       .element(screen.getByText("5,700", { exact: true }))
       .toBeVisible();
     await expect
-      .element(screen.getByText("2,160", { exact: true }))
+      .element(screen.getByText("-345", { exact: true }))
       .toBeVisible();
     await expect
-      .element(screen.getByText("3,540", { exact: true }))
-      .toBeVisible();
-    await expect
-      .element(screen.getByText("(expected standard of living 0.2)"))
+      .element(
+        screen.getByText("(standard of living: actual 0.6, expected 1.0)"),
+      )
       .toBeVisible();
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
