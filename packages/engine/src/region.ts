@@ -9,8 +9,5 @@ export interface Region {
 }
 
 export function createRegion(fields: Region): Region {
-  if (fields.pops.length === 0) {
-    throw new Error(`Region ${fields.id} must have at least one pop`);
-  }
   return { id: fields.id, type: fields.type, pops: [...fields.pops] };
 }

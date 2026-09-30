@@ -26,6 +26,7 @@ const planets = [
         type: "rural",
         pops: [createPop({ id: "veyra-2-1", size: 800 })],
       }),
+      createRegion({ id: "veyra-3", type: "rural", pops: [] }),
     ],
   }),
   createPlanet({
@@ -74,10 +75,11 @@ describe("on wide viewports", () => {
       .element(screen.getByRole("heading", { level: 2, name: "Veyra" }))
       .toBeVisible();
     await expect.element(screen.getByText("Urban")).toBeVisible();
-    await expect.element(screen.getByText("Rural")).toBeVisible();
+    await expect.element(screen.getByText("Rural").first()).toBeVisible();
     await expect.element(screen.getByText("4,200 people")).toBeVisible();
     await expect.element(screen.getByText("1,500 people")).toBeVisible();
     await expect.element(screen.getByText("800 people")).toBeVisible();
+    await expect.element(screen.getByText("Unpopulated")).toBeVisible();
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
       .toBeVisible();

@@ -19,9 +19,9 @@ describe("createRegion", () => {
     expect(region.pops).toHaveLength(1);
   });
 
-  test("throws without pops", () => {
-    expect(() => createRegion({ id: "r1", type: "rural", pops: [] })).toThrow(
-      "Region r1 must have at least one pop",
+  test("allows an unpopulated region", () => {
+    expect(createRegion({ id: "r1", type: "rural", pops: [] }).pops).toEqual(
+      [],
     );
   });
 });

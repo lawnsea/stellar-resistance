@@ -32,7 +32,10 @@ export const testPlanets: readonly Planet[] = [
   createPlanet({
     id: "imbrel",
     name: "Imbrel",
-    regions: [region("imbrel-1", "rural", [300, 120])],
+    regions: [
+      region("imbrel-1", "rural", [300, 120]),
+      region("imbrel-2", "rural", []),
+    ],
   }),
   createPlanet({
     id: "korrins-reach",
