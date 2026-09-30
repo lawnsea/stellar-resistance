@@ -33,6 +33,7 @@ export function computeRegionEconomy(
       size * config.productionRate * Math.min(1, pop.actualStandardOfLiving);
     consumption += size;
   }
+  production = Math.min(production, region.productionCap);
   return { production, consumption, surplus: production - consumption };
 }
 
