@@ -6,6 +6,7 @@ import {
   createRegion,
   defaultConfig,
   nextExpectedStandardOfLiving,
+  type Planet,
   tick,
 } from "./index";
 
@@ -65,9 +66,22 @@ describe("nextExpectedStandardOfLiving", () => {
     expect(nextExpectedStandardOfLiving(2, 1.5, config)).toBeCloseTo(1.75);
   });
 
-  test("never falls below 1.0", () => {
-    expect(nextExpectedStandardOfLiving(1.2, 0.2, config)).toBe(1);
+  test("can fall below 1.0", () => {
+    expect(nextExpectedStandardOfLiving(1.2, 0.2, config)).toBeCloseTo(0.7);
   });
+});
+
+test("a pop that starves for several ticks comes to expect starvation", () => {
+  const r = region([pop("a", 1000, 0, 1.2)]);
+  let planets: readonly Planet[] = [
+    createPlanet({ id: "pl", name: "Ferrix", regions: [r] }),
+  ];
+  for (let i = 0; i < 20; i++) {
+    planets = tick(planets, config).planets;
+  }
+  const starving = planets[0]?.regions[0]?.pops[0];
+  expect(starving?.actualStandardOfLiving).toBe(0);
+  expect(starving?.expectedStandardOfLiving).toBeLessThan(0.01);
 });
 
 describe("tick", () => {

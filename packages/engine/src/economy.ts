@@ -40,10 +40,7 @@ export function nextExpectedStandardOfLiving(
   actual: number,
   config: EngineConfig = defaultConfig,
 ): number {
-  return Math.max(
-    1,
-    expected + (actual - expected) * config.expectationAdjustmentRate,
-  );
+  return expected + (actual - expected) * config.expectationAdjustmentRate;
 }
 
 function tickRegion(

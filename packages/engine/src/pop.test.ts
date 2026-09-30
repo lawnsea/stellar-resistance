@@ -39,19 +39,19 @@ describe("createPop", () => {
     );
   });
 
-  test.each([1, 2.5])("accepts expected standard of living %s", (sol) => {
+  test.each([0, 0.5, 2.5])("accepts expected standard of living %s", (sol) => {
     expect(
       createPop({ ...fields, expectedStandardOfLiving: sol })
         .expectedStandardOfLiving,
     ).toBe(sol);
   });
 
-  test.each([0.99, 0, Number.NaN, Number.POSITIVE_INFINITY])(
+  test.each([-0.1, Number.NaN, Number.POSITIVE_INFINITY])(
     "rejects expected standard of living %s",
     (sol) => {
       expect(() =>
         createPop({ ...fields, expectedStandardOfLiving: sol }),
-      ).toThrow("Pop p1 expected standard of living must be at least 1");
+      ).toThrow("Pop p1 expected standard of living must be at least 0");
     },
   );
 

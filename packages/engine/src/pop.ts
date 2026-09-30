@@ -33,11 +33,11 @@ export function createPop(
     );
   }
   if (
-    !(expectedStandardOfLiving >= 1) ||
+    !(expectedStandardOfLiving >= 0) ||
     !Number.isFinite(expectedStandardOfLiving)
   ) {
     throw new Error(
-      `Pop ${id} expected standard of living must be at least 1, got ${expectedStandardOfLiving}`,
+      `Pop ${id} expected standard of living must be at least 0, got ${expectedStandardOfLiving}`,
     );
   }
   return { id, size, actualStandardOfLiving, expectedStandardOfLiving };
