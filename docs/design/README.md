@@ -28,7 +28,7 @@ Violent resistance can radicalize supporters and is necessary to degrade the cap
 
 ## Entities
 
-See [entities](entities/README.md) and the [engine config](engine-config.md).
+See [entities](entities/README.md) and the [engine config](../architecture/engine/engine-config.md).
 
 # Bibliography
 

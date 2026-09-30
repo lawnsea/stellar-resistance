@@ -11,9 +11,9 @@ Exported from `@stellar-resistance/engine`.
 | Field | Type | Description |
 |---|---|---|
 | `id` | `string` | Unique identifier |
-| `size` | `number` | Number of people; an integer from 1 to [`maxPopSize`](../engine-config.md) |
+| `size` | `number` | Number of people; an integer from 1 to [`maxPopSize`](../../architecture/engine/engine-config.md) |
 | `expectedStandardOfLiving` | `number` | In (0.0, 1.0]; scales the pop's consumption |
 
 ### `createPop(fields: Pop, config?: EngineConfig): Pop`
 
-Creates a pop. Throws if `size` isn't an integer from 1 to `config.maxPopSize`, or if `expectedStandardOfLiving` isn't in (0.0, 1.0]. `config` defaults to [`defaultConfig`](../engine-config.md).
+Creates a pop. Throws if `size` isn't an integer from 1 to `config.maxPopSize`, or if `expectedStandardOfLiving` isn't in (0.0, 1.0]. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).

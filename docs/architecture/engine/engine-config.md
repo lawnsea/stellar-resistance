@@ -10,9 +10,9 @@ Exported from `@stellar-resistance/engine`.
 
 | Field | Type | Description |
 |---|---|---|
-| `maxPopSize` | `number` | The largest allowed [pop](entities/pop.md) size |
-| `productionRate` | `number` | Resources a [region](entities/region.md) produces per person at productivity 1.0 |
-| `consumptionRate` | `number` | Resources a [pop](entities/pop.md) consumes per person at expected standard of living 1.0 |
+| `maxPopSize` | `number` | The largest allowed [pop](../../design/entities/pop.md) size |
+| `productionRate` | `number` | Resources a [region](../../design/entities/region.md) produces per person at productivity 1.0 |
+| `consumptionRate` | `number` | Resources a [pop](../../design/entities/pop.md) consumes per person at expected standard of living 1.0 |
 
 ### `defaultConfig: EngineConfig`
 
