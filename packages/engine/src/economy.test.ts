@@ -188,9 +188,4 @@ describe("births and deaths", () => {
     const next = tickPop(pop("a", 1234, 1.3), 3);
     expect(Number.isInteger(next.size)).toBe(true);
   });
-
-  test("size stays between 1 and the maximum", () => {
-    expect(tickPop(pop("a", 5000, 3)).size).toBe(5000);
-    expect(tickPop(pop("a", 1, 0), 5).size).toBe(1);
-  });
 });

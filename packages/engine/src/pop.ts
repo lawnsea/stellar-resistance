@@ -54,17 +54,7 @@ export function exactSize(pop: Pop): number {
   return (pop as Partial<PopState>).exactSize ?? pop.size;
 }
 
-// Until pops can split and die out, sizes stay between 1 and the maximum.
-export function withExactSize(
-  pop: Pop,
-  size: number,
-  config: EngineConfig,
-): Pop {
-  const clamped = Math.min(config.maxPopSize, Math.max(1, size));
-  const next: PopState = {
-    ...pop,
-    size: Math.floor(clamped),
-    exactSize: clamped,
-  };
+export function withExactSize(pop: Pop, size: number): Pop {
+  const next: PopState = { ...pop, size: Math.floor(size), exactSize: size };
   return next;
 }
