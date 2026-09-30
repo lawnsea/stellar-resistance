@@ -1,5 +1,6 @@
 import { defaultConfig, type EngineConfig } from "./config";
 import { birthRate, deathRate } from "./demography";
+import { splitAndRemovePops } from "./lifecycle";
 import type { Planet } from "./planet";
 import { exactSize, withExactSize } from "./pop";
 import type { Region } from "./region";
@@ -70,7 +71,6 @@ function tickRegion(
         ),
       },
       size + births - deaths,
-      config,
     );
   });
   return { region: { ...region, pops }, economy };
@@ -89,5 +89,5 @@ export function tick(
       return next.region;
     }),
   }));
-  return { planets: nextPlanets, report };
+  return { planets: splitAndRemovePops(nextPlanets, config), report };
 }
