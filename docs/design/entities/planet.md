@@ -12,22 +12,11 @@ Exported from `@stellar-resistance/engine`.
 |---|---|---|
 | `id` | `string` | Unique identifier |
 | `name` | `string` | Display name |
-| `regions` | `readonly Region[]` | The planet's regions; always at least one |
-
-### `Region`
-
-| Field | Type | Description |
-|---|---|---|
-| `id` | `string` | Unique identifier |
-| `name` | `string` | Display name |
+| `regions` | `readonly Region[]` | The planet's [regions](region.md); always at least one |
 
 ### `createPlanet(fields: Planet): Planet`
 
 Creates a planet with a copy of the given regions. Throws if `regions` is empty.
-
-### `createRegion(fields: Region): Region`
-
-Creates a region.
 
 ### `testPlanets: readonly Planet[]`
 
