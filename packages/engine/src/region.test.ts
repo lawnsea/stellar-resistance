@@ -7,11 +7,11 @@ import {
   deathRate,
   defaultConfig,
   type EngineConfig,
+  type Pop,
   Region,
   type RegionState,
 } from "./index";
 import { exactSize, withExactSize } from "./pop";
-import { splitAndRemovePops } from "./region";
 
 const config = {
   ...defaultConfig,
@@ -231,35 +231,47 @@ describe("births and deaths", () => {
   });
 });
 
-describe("splitAndRemovePops", () => {
+describe("Region.tick splits and removes pops", () => {
+  // No births or deaths, so each pop's size stays as set until it's split or
+  // removed.
+  const steady = { ...defaultConfig, baseBirthRate: 0, baseDeathRate: 0 };
+
+  function popsAfterTick(pops: Pop[]): readonly Pop[] {
+    const ticked = new Region(
+      createRegion({ id: "r1", type: "urban", productionCap: 1e9, pops }),
+      steady,
+    );
+    ticked.tick();
+    return ticked.getState().pops;
+  }
+
   test("splits a pop over the maximum into two new pops of half its size", () => {
-    const big = withExactSize(base, 5000.7);
-    const [a, b, ...rest] = splitAndRemovePops([big], defaultConfig);
+    const [a, b, ...rest] = popsAfterTick([withExactSize(base, 5000.7)]);
     expect(rest).toHaveLength(0);
     for (const half of [a, b]) {
       expect(half && exactSize(half)).toBeCloseTo(2500.35, 9);
       expect(half?.size).toBe(2500);
-      expect(half?.actualStandardOfLiving).toBe(1.2);
-      expect(half?.expectedStandardOfLiving).toBe(1.1);
     }
+    expect(a?.actualStandardOfLiving).toBe(b?.actualStandardOfLiving);
+    expect(a?.expectedStandardOfLiving).toBe(b?.expectedStandardOfLiving);
     expect(a?.id).not.toBe(b?.id);
     expect([a?.id, b?.id]).not.toContain("p");
   });
 
   test("keeps a pop at exactly the maximum", () => {
-    const full = withExactSize(base, 5000);
-    expect(splitAndRemovePops([full], defaultConfig)).toEqual([full]);
+    const pops = popsAfterTick([withExactSize(base, 5000)]);
+    expect(pops.map((pop) => [pop.id, exactSize(pop)])).toEqual([["p", 5000]]);
   });
 
   test("removes a pop below 1", () => {
-    const dying = withExactSize(base, 0.6);
     const other = createPop({ id: "q", size: 10, expectedStandardOfLiving: 1 });
-    expect(splitAndRemovePops([dying, other], defaultConfig)).toEqual([other]);
+    const pops = popsAfterTick([withExactSize(base, 0.6), other]);
+    expect(pops.map((pop) => pop.id)).toEqual(["q"]);
   });
 
   test("keeps a pop at exactly 1", () => {
-    const one = withExactSize(base, 1);
-    expect(splitAndRemovePops([one], defaultConfig)).toEqual([one]);
+    const pops = popsAfterTick([withExactSize(base, 1)]);
+    expect(pops.map((pop) => [pop.id, exactSize(pop)])).toEqual([["p", 1]]);
   });
 });
 

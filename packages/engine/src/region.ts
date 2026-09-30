@@ -79,10 +79,7 @@ function nextRegionState(
 
 // Applies after all of a region's changes for a tick. To move into a separate
 // after-tick handler (#28).
-export function splitAndRemovePops(
-  pops: readonly Pop[],
-  config: EngineConfig,
-): Pop[] {
+function splitAndRemovePops(pops: readonly Pop[], config: EngineConfig): Pop[] {
   return pops.flatMap((pop) => splitOrRemove(pop, config));
 }
 
