@@ -41,4 +41,4 @@ Amounts are in units of production.
 
 Computes one tick of a region's economy. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
 
-Each tick's economies are reported by [`tick`](../../architecture/engine/world.md).
+Each tick's economies are reported by [`tick`](../../architecture/engine/state.md).

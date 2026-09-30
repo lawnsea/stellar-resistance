@@ -3,7 +3,7 @@ import { birthRate, deathRate } from "./demography";
 import { splitAndRemovePops } from "./lifecycle";
 import { exactSize, withExactSize } from "./pop";
 import type { Region } from "./region";
-import type { World } from "./world";
+import type { State } from "./state";
 
 export interface RegionEconomy {
   readonly production: number;
@@ -14,7 +14,7 @@ export interface RegionEconomy {
 export type TickReport = Readonly<Record<string, RegionEconomy>>;
 
 export interface TickResult {
-  readonly world: World;
+  readonly state: State;
   readonly report: TickReport;
 }
 
@@ -71,11 +71,11 @@ function tickRegion(
 }
 
 export function tick(
-  world: World,
+  state: State,
   config: EngineConfig = defaultConfig,
 ): TickResult {
   const report: Record<string, RegionEconomy> = {};
-  const nextPlanets = world.planets.map((planet) => ({
+  const nextPlanets = state.planets.map((planet) => ({
     ...planet,
     regions: planet.regions.map((region) => {
       const next = tickRegion(region, config);
@@ -84,7 +84,7 @@ export function tick(
     }),
   }));
   return {
-    world: { ...world, planets: splitAndRemovePops(nextPlanets, config) },
+    state: { ...state, planets: splitAndRemovePops(nextPlanets, config) },
     report,
   };
 }

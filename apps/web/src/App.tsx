@@ -1,4 +1,4 @@
-import { testWorld } from "@stellar-resistance/engine";
+import { testState } from "@stellar-resistance/engine";
 import { Heading } from "react-aria-components";
 import { PlanetViewer } from "./PlanetViewer";
 
@@ -11,7 +11,7 @@ export function App() {
         </Heading>
       </header>
       <main className="flex min-h-0 flex-1">
-        <PlanetViewer world={testWorld} />
+        <PlanetViewer state={testState} />
       </main>
     </div>
   );
