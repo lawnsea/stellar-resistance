@@ -6,7 +6,7 @@ export {
   type RegionEconomy,
 } from "./economy";
 export { createFaction, type Faction } from "./faction";
-export { GameState, type GameStateData } from "./game-state";
+export { Game, type GameState } from "./game";
 export { createPlanet, Planet, type PlanetState } from "./planet";
 export { createPop, type Pop, type PopFields } from "./pop";
 export {
@@ -15,5 +15,5 @@ export {
   type RegionState,
   type RegionType,
 } from "./region";
-export { testGameState, testPlanets } from "./test-planets";
+export { testGame, testPlanets } from "./test-planets";
 export type { Stateful, Tickable } from "./traits";

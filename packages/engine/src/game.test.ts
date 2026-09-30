@@ -4,7 +4,7 @@ import {
   createPlanet,
   createPop,
   createRegion,
-  GameState,
+  Game,
   Planet,
   Region,
 } from "./index";
@@ -26,53 +26,53 @@ const region = createRegion({
 const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [region] });
 const data = { factions: [faction], planets: [planet] };
 
-describe("GameState", () => {
+describe("Game", () => {
   test("exposes its factions and planets", () => {
-    const state = new GameState(data);
-    expect(state.factions).toEqual([faction]);
-    expect(state.planets.map((p) => p.getState())).toEqual([planet]);
-    expect(state.planets[0]).toBeInstanceOf(Planet);
+    const game = new Game(data);
+    expect(game.factions).toEqual([faction]);
+    expect(game.planets.map((p) => p.getState())).toEqual([planet]);
+    expect(game.planets[0]).toBeInstanceOf(Planet);
   });
 
   test("copies the factions and planets arrays", () => {
     const factions = [faction];
     const planets = [planet];
-    const state = new GameState({ factions, planets });
+    const game = new Game({ factions, planets });
     factions.push(createFaction({ id: "f2", name: "The Empire" }));
     planets.push(planet);
-    expect(state.factions).toHaveLength(1);
-    expect(state.planets).toHaveLength(1);
+    expect(game.factions).toHaveLength(1);
+    expect(game.planets).toHaveLength(1);
   });
 
   test("gets and sets its state as plain data", () => {
-    const state = new GameState(data);
-    const plain = JSON.parse(JSON.stringify(state.getState()));
-    expect(plain).toEqual(state.getState());
-    const other = new GameState({ factions: [], planets: [] });
+    const game = new Game(data);
+    const plain = JSON.parse(JSON.stringify(game.getState()));
+    expect(plain).toEqual(game.getState());
+    const other = new Game({ factions: [], planets: [] });
     other.setState(plain);
-    expect(other.getState()).toEqual(state.getState());
+    expect(other.getState()).toEqual(game.getState());
   });
 
   test("tick carries factions through and ticks every planet", () => {
-    const next = new GameState(data).tick();
+    const next = new Game(data).tick();
     expect(next.factions).toEqual([faction]);
     expect(next.planets[0]?.getState()).toEqual(
       new Planet(planet).tick().getState(),
     );
   });
 
-  test("tick returns a new state without changing the original", () => {
-    const state = new GameState(data);
-    const snapshot = JSON.parse(JSON.stringify(state.getState()));
-    const next = state.tick();
-    expect(state.getState()).toEqual(snapshot);
-    expect(next).not.toBe(state);
+  test("tick returns a new game without changing the original", () => {
+    const game = new Game(data);
+    const snapshot = JSON.parse(JSON.stringify(game.getState()));
+    const next = game.tick();
+    expect(game.getState()).toEqual(snapshot);
+    expect(next).not.toBe(game);
   });
 
   test("tick(n) equals n single ticks", () => {
-    const state = new GameState(data);
-    expect(state.tick(3).getState()).toEqual(
-      state.tick().tick().tick().getState(),
+    const game = new Game(data);
+    expect(game.tick(3).getState()).toEqual(
+      game.tick().tick().tick().getState(),
     );
   });
 });

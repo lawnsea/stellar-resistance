@@ -2,7 +2,7 @@ import {
   birthRate,
   computeRegionEconomy,
   deathRate,
-  type GameState,
+  type Game,
   type Planet,
   type RegionEconomy,
   type RegionType,
@@ -26,8 +26,8 @@ const regionTypeLabels: Record<RegionType, string> = {
   urban: "Urban",
 };
 
-export function PlanetViewer({ state }: { state: GameState }) {
-  const planets = useMemo(() => state.planets, [state]);
+export function PlanetViewer({ game }: { game: Game }) {
+  const planets = useMemo(() => game.planets, [game]);
   const [filterText, setFilterText] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { contains } = useFilter({ sensitivity: "base" });

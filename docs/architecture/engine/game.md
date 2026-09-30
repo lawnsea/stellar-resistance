@@ -1,6 +1,6 @@
-# Game state
+# Game
 
-`GameState` holds the engine's whole game state: its factions and its planets. Game state classes keep their data as plain objects, so it can be saved or sent between web workers, and each level ticks itself: the game state ticks its planets, and each planet ticks its regions.
+`Game` holds the engine's whole game state: its factions and its planets. The game and its entity classes keep their data as plain objects, so it can be saved or sent between web workers, and each level ticks itself: the game ticks its planets, and each planet ticks its regions.
 
 ## API
 
@@ -23,17 +23,19 @@ Implemented by classes that advance with the simulation.
 |---|---|
 | `tick(n = 1): T` | Returns a new object advanced n ticks, leaving the original unchanged |
 
-### `GameStateData`
+### `GameState`
+
+The game's plain data.
 
 | Field | Type | Description |
 |---|---|---|
 | `factions` | `readonly Faction[]` | The [factions](../../design/entities/faction.md) |
 | `planets` | `readonly PlanetState[]` | The [planets](../../design/entities/planet.md) |
 
-### `class GameState`
+### `class Game`
 
-Implements `Stateful<GameStateData>` and `Tickable<GameState>`. Constructed with `new GameState(state, config?)`, which copies the factions and planets arrays; `config` defaults to [`defaultConfig`](engine-config.md). Getters: `factions`, and `planets`, which returns [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` returns a new game state with the same factions and each planet ticked n times.
+Implements `Stateful<GameState>` and `Tickable<Game>`. Constructed with `new Game(state, config?)`, which copies the factions and planets arrays; `config` defaults to [`defaultConfig`](engine-config.md). Getters: `factions`, and `planets`, which returns [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` returns a new game with the same factions and each planet ticked n times.
 
-### `testGameState: GameState`
+### `testGame: Game`
 
 The [test planets](../../design/entities/planet.md) with no factions, for development and testing.

@@ -3,16 +3,16 @@ import type { Faction } from "./faction";
 import { Planet, type PlanetState } from "./planet";
 import type { Stateful, Tickable } from "./traits";
 
-export interface GameStateData {
+export interface GameState {
   readonly factions: readonly Faction[];
   readonly planets: readonly PlanetState[];
 }
 
-export class GameState implements Stateful<GameStateData>, Tickable<GameState> {
-  private _state: GameStateData;
+export class Game implements Stateful<GameState>, Tickable<Game> {
+  private _state: GameState;
   private readonly config: EngineConfig;
 
-  constructor(state: GameStateData, config: EngineConfig = defaultConfig) {
+  constructor(state: GameState, config: EngineConfig = defaultConfig) {
     this._state = {
       factions: [...state.factions],
       planets: [...state.planets],
@@ -28,16 +28,16 @@ export class GameState implements Stateful<GameStateData>, Tickable<GameState> {
     return this._state.planets.map((planet) => new Planet(planet, this.config));
   }
 
-  getState(): GameStateData {
+  getState(): GameState {
     return this._state;
   }
 
-  setState(state: GameStateData): void {
+  setState(state: GameState): void {
     this._state = state;
   }
 
-  tick(n = 1): GameState {
-    return new GameState(
+  tick(n = 1): Game {
+    return new Game(
       {
         factions: this._state.factions,
         planets: this.planets.map((planet) => planet.tick(n).getState()),

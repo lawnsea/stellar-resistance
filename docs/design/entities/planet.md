@@ -22,7 +22,7 @@ Creates a planet's data with a copy of the given regions. Throws if `regions` is
 
 ### `class Planet`
 
-Implements [`Stateful<PlanetState>` and `Tickable<Planet>`](../../architecture/engine/game-state.md). Constructed with `new Planet(state, config?)`. Getters: `id`, `name`, and `regions`, which returns [`Region`](region.md) instances. `tick(n = 1)` returns a new planet whose regions have each ticked n times.
+Implements [`Stateful<PlanetState>` and `Tickable<Planet>`](../../architecture/engine/game.md). Constructed with `new Planet(state, config?)`. Getters: `id`, `name`, and `regions`, which returns [`Region`](region.md) instances. `tick(n = 1)` returns a new planet whose regions have each ticked n times.
 
 ### `testPlanets: readonly PlanetState[]`
 

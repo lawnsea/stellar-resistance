@@ -1,4 +1,4 @@
-import { GameState } from "./game-state";
+import { Game } from "./game";
 import { createPlanet, type PlanetState } from "./planet";
 import { createPop } from "./pop";
 import { createRegion, type RegionState, type RegionType } from "./region";
@@ -98,7 +98,7 @@ export const testPlanets: readonly PlanetState[] = [
   }),
 ];
 
-export const testGameState = new GameState({
+export const testGame = new Game({
   factions: [],
   planets: testPlanets,
 });
