@@ -27,14 +27,14 @@ Returns `expected + (actual − expected) × expectationAdjustmentRate`.
 
 ### `birthRate(standardOfLiving: number, config?: EngineConfig): number`
 
-Births per person per tick, where s is the standard of living, b is [`baseBirthRate`](../../architecture/engine/engine-config.md), g is `prosperityResponse`, and c is `deprivationCurvature`:
+Births per person per tick. Both rate formulas use a shared curve, D(x, k) = ln(1 + k·x) / ln(1 + k), which rises with diminishing returns from 0 at x = 0 to 1 at x = 1. With s the standard of living, b [`baseBirthRate`](../../architecture/engine/engine-config.md), and the prosperity and deprivation responses (r) and curvatures (k) from the config:
 
-- s ≥ 1: b × (1 + g × ln(s))
-- s < 1: b × (1 − ln(1 + c(1 − s)) / ln(1 + c)), which is 0 at s = 0
+- s ≥ 1: b × (1 + r_prosperity × D(s − 1, k_prosperity))
+- s < 1: b × (1 − D(1 − s, k_deprivation)), which is 0 at s = 0
 
 ### `deathRate(standardOfLiving: number, config?: EngineConfig): number`
 
-Deaths per person per tick, where d is [`baseDeathRate`](../../architecture/engine/engine-config.md) and m is `starvationDeathMultiplier`:
+Deaths per person per tick, with d [`baseDeathRate`](../../architecture/engine/engine-config.md):
 
-- s ≤ 1: d × (1 + m × ln(1 + c(1 − s)) / ln(1 + c)), which is d × (1 + m) at s = 0
-- s > 1: d / (1 + g × ln(s)), which approaches but never reaches 0
+- s ≤ 1: d × (1 + r_deprivation × D(1 − s, k_deprivation)), which is d × (1 + r_deprivation) at s = 0
+- s > 1: d / (1 + r_prosperity × D(s − 1, k_prosperity)), which approaches but never reaches 0

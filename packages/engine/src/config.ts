@@ -5,8 +5,9 @@ export interface EngineConfig {
   readonly baseBirthRate: number;
   readonly baseDeathRate: number;
   readonly prosperityResponse: number;
+  readonly prosperityCurvature: number;
+  readonly deprivationResponse: number;
   readonly deprivationCurvature: number;
-  readonly starvationDeathMultiplier: number;
 }
 
 export const defaultConfig: EngineConfig = {
@@ -16,7 +17,8 @@ export const defaultConfig: EngineConfig = {
   expectationAdjustmentRate: 0.1,
   baseBirthRate: 0.01,
   baseDeathRate: 0.01,
-  prosperityResponse: 2,
+  prosperityResponse: 1.4,
+  prosperityCurvature: 1,
+  deprivationResponse: 4,
   deprivationCurvature: 4,
-  starvationDeathMultiplier: 4,
 };

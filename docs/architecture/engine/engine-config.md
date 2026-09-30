@@ -15,9 +15,10 @@ Exported from `@stellar-resistance/engine`.
 | `expectationAdjustmentRate` | `number` | In (0.0, 1.0]; how far a [pop](../../design/entities/pop.md)'s expected standard of living moves toward its actual standard of living each tick |
 | `baseBirthRate` | `number` | Births per person per tick at a standard of living of 1.0; see [`birthRate`](../../design/entities/pop.md) |
 | `baseDeathRate` | `number` | Deaths per person per tick at a standard of living of 1.0; see [`deathRate`](../../design/entities/pop.md) |
-| `prosperityResponse` | `number` | How strongly births rise and deaths fall above a standard of living of 1.0 |
-| `deprivationCurvature` | `number` | How sharply births fall and deaths rise just below 1.0, versus near 0.0 |
-| `starvationDeathMultiplier` | `number` | Death rate at a standard of living of 0.0, as a multiple of the base rate above it |
+| `prosperityResponse` | `number` | How strongly births rise and deaths fall above a standard of living of 1.0; the birth rate at 2.0 is the base × (1 + this) |
+| `prosperityCurvature` | `number` | How front-loaded the prosperity response is: higher values put more of it just above 1.0 |
+| `deprivationResponse` | `number` | How strongly deaths rise below 1.0; the death rate at 0.0 is the base × (1 + this) |
+| `deprivationCurvature` | `number` | How front-loaded the deprivation response is: higher values put more of it just below 1.0 |
 
 ### `defaultConfig: EngineConfig`
 
@@ -28,6 +29,7 @@ Exported from `@stellar-resistance/engine`.
 | `expectationAdjustmentRate` | `0.1` | Starting value |
 | `baseBirthRate` | `0.01` | Equal to the base death rate, so pops are stable at 1.0 |
 | `baseDeathRate` | `0.01` | Starting value |
-| `prosperityResponse` | `2` | Starting value; about +0.19% net growth per tick at the default production rate's 1.05 |
+| `prosperityResponse` | `1.4` | Starting value; about +0.19% net growth per tick at the default production rate's 1.05 |
+| `prosperityCurvature` | `1` | Starting value; makes the prosperity curve logarithmic in the standard of living |
+| `deprivationResponse` | `4` | Starting value; a starving pop loses 5% per tick |
 | `deprivationCurvature` | `4` | Starting value |
-| `starvationDeathMultiplier` | `4` | Starting value; a starving pop loses 5% per tick |
