@@ -3,8 +3,6 @@ import { defaultConfig, type EngineConfig } from "./config";
 export interface Pop {
   readonly id: string;
   readonly size: number;
-  // Share of production received last tick, relative to the pop's
-  // consumption requirement. 1.0 means the requirement was exactly met.
   readonly actualStandardOfLiving: number;
   readonly expectedStandardOfLiving: number;
 }
@@ -43,9 +41,6 @@ export function createPop(
   return { id, size, actualStandardOfLiving, expectedStandardOfLiving };
 }
 
-// The engine tracks each pop's size as a float, so fractional births and
-// deaths accumulate across ticks. The API exposes only the integer part, as
-// `size`.
 interface PopState extends Pop {
   readonly exactSize: number;
 }
