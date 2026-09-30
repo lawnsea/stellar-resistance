@@ -18,4 +18,4 @@ The app is instrumented to produce logs and metrics usefully characterizing its 
 
 ## Engine
 
-See the [engine config](engine/engine-config.md).
+See the [world](engine/world.md) and the [engine config](engine/engine-config.md).

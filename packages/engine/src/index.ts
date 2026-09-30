@@ -12,4 +12,5 @@ export { createFaction, type Faction } from "./faction";
 export { createPlanet, type Planet } from "./planet";
 export { createPop, type Pop, type PopFields } from "./pop";
 export { createRegion, type Region, type RegionType } from "./region";
-export { testPlanets } from "./test-planets";
+export { testPlanets, testWorld } from "./test-planets";
+export { createWorld, type World } from "./world";

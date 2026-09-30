@@ -1,6 +1,7 @@
 import { createPlanet, type Planet } from "./planet";
 import { createPop } from "./pop";
 import { createRegion, type Region, type RegionType } from "./region";
+import { createWorld, type World } from "./world";
 
 // Each pop is [size, expected standard of living, actual standard of living].
 function region(
@@ -96,3 +97,8 @@ export const testPlanets: readonly Planet[] = [
     ],
   }),
 ];
+
+export const testWorld: World = createWorld({
+  factions: [],
+  planets: testPlanets,
+});

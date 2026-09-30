@@ -41,6 +41,4 @@ Amounts are in units of production.
 
 Computes one tick of a region's economy. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
 
-### `tick(planets: readonly Planet[], config?: EngineConfig): TickResult`
-
-Advances the simulation one tick. Returns `{ planets, report }`: the planets with each pop's actual and expected standard of living updated, and each region's economy keyed by region id. It doesn't change its input.
+Each tick's economies are reported by [`tick`](../../architecture/engine/world.md).

@@ -3,11 +3,17 @@ import {
   createPlanet,
   createPop,
   createRegion,
+  createWorld,
   defaultConfig,
   type Planet,
   type Pop,
   tick,
 } from "./index";
+
+function worldOf(planets: readonly Planet[]) {
+  return createWorld({ factions: [], planets });
+}
+
 import { splitAndRemovePops } from "./lifecycle";
 import { exactSize, withExactSize } from "./pop";
 
@@ -92,7 +98,9 @@ describe("tick", () => {
       actualStandardOfLiving: 2,
       expectedStandardOfLiving: 1,
     });
-    const pops = popsAfter(tick([planetWith([growing])], config).planets);
+    const pops = popsAfter(
+      tick(worldOf([planetWith([growing])]), config).world.planets,
+    );
     expect(pops).toHaveLength(2);
     expect(pops.map((p) => p.size).every((s) => s <= 2600)).toBe(true);
   });
@@ -104,8 +112,8 @@ describe("tick", () => {
       actualStandardOfLiving: 0,
       expectedStandardOfLiving: 1,
     });
-    expect(popsAfter(tick([planetWith([starving])], config).planets)).toEqual(
-      [],
-    );
+    expect(
+      popsAfter(tick(worldOf([planetWith([starving])]), config).world.planets),
+    ).toEqual([]);
   });
 });

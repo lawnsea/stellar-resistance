@@ -5,12 +5,17 @@ import {
   createPlanet,
   createPop,
   createRegion,
+  createWorld,
   deathRate,
   defaultConfig,
   nextExpectedStandardOfLiving,
   type Planet,
   tick,
 } from "./index";
+
+function worldOf(planets: readonly Planet[]) {
+  return createWorld({ factions: [], planets });
+}
 
 const config = {
   ...defaultConfig,
@@ -92,7 +97,7 @@ test("a pop that starves for several ticks comes to expect starvation", () => {
     createPlanet({ id: "pl", name: "Ferrix", regions: [r] }),
   ];
   for (let i = 0; i < 20; i++) {
-    planets = tick(planets, config).planets;
+    planets = tick(worldOf(planets), config).world.planets;
   }
   const starving = planets[0]?.regions[0]?.pops[0];
   expect(starving?.actualStandardOfLiving).toBe(0);
@@ -104,7 +109,7 @@ describe("tick", () => {
     // Production: 1000 × 0.5 + 3000 × 1 = 3500 units for 4000 people.
     const r = region([pop("a", 1000, 0.5), pop("b", 3000, 1)]);
     const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
-    const [next] = tick([planet], config).planets;
+    const [next] = tick(worldOf([planet]), config).world.planets;
     const [a, b] = next?.regions[0]?.pops ?? [];
     expect(a?.actualStandardOfLiving).toBeCloseTo(3500 / 4000);
     expect(b?.actualStandardOfLiving).toBeCloseTo(3500 / 4000);
@@ -113,17 +118,18 @@ describe("tick", () => {
   test("a pop of 500 whose share is 500 units has an actual standard of living of 1.0", () => {
     const r = region([pop("a", 500, 1)]);
     const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
-    const result = tick([planet], config);
+    const result = tick(worldOf([planet]), config);
     expect(result.report.r1?.production).toBe(500);
-    expect(result.planets[0]?.regions[0]?.pops[0]?.actualStandardOfLiving).toBe(
-      1,
-    );
+    expect(
+      result.world.planets[0]?.regions[0]?.pops[0]?.actualStandardOfLiving,
+    ).toBe(1);
   });
 
   test("updates expected standard of living toward the new actual", () => {
     const r = region([pop("a", 1000, 1, 2)]);
     const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
-    const next = tick([planet], { ...config, productionRate: 1.5 }).planets;
+    const next = tick(worldOf([planet]), { ...config, productionRate: 1.5 })
+      .world.planets;
     // Actual becomes 1.5; expected moves halfway from 2 toward 1.5.
     expect(next[0]?.regions[0]?.pops[0]?.expectedStandardOfLiving).toBeCloseTo(
       1.75,
@@ -133,7 +139,7 @@ describe("tick", () => {
   test("reports each region's economy", () => {
     const r = region([pop("a", 1000, 0.8)]);
     const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
-    expect(tick([planet], config).report).toEqual({
+    expect(tick(worldOf([planet]), config).report).toEqual({
       r1: computeRegionEconomy(r, config),
     });
   });
@@ -141,7 +147,7 @@ describe("tick", () => {
   test("a capped region's pops get the capped share", () => {
     const r = region([pop("a", 1000, 1)], 800);
     const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
-    const [next] = tick([planet], config).planets;
+    const [next] = tick(worldOf([planet]), config).world.planets;
     expect(next?.regions[0]?.pops[0]?.actualStandardOfLiving).toBeCloseTo(0.8);
   });
 
@@ -149,9 +155,9 @@ describe("tick", () => {
     const r = region([pop("a", 1000, 0.5, 2)]);
     const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [r] });
     const snapshot = JSON.parse(JSON.stringify(planet));
-    const result = tick([planet], config);
+    const result = tick(worldOf([planet]), config);
     expect(planet).toEqual(snapshot);
-    expect(result.planets[0]).not.toBe(planet);
+    expect(result.world.planets[0]).not.toBe(planet);
   });
 
   test("pops fully provided for run a surplus at the default production rate", () => {
@@ -167,7 +173,7 @@ describe("births and deaths", () => {
       createPlanet({ id: "pl", name: "Ferrix", regions: [region([p])] }),
     ];
     for (let i = 0; i < times; i++) {
-      planets = tick(planets, config).planets;
+      planets = tick(worldOf(planets), config).world.planets;
     }
     const next = planets[0]?.regions[0]?.pops[0];
     if (!next) throw new Error("pop missing");
@@ -199,7 +205,7 @@ describe("births and deaths", () => {
       }),
     ];
     for (let i = 0; i < 10; i++) {
-      planets = tick(planets, thriving).planets;
+      planets = tick(worldOf(planets), thriving).world.planets;
     }
     expect(planets[0]?.regions[0]?.pops[0]?.size).toBeGreaterThan(40);
   });

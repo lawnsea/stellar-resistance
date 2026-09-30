@@ -5,6 +5,7 @@ import {
   type RegionType,
   type TickReport,
   tick,
+  type World,
 } from "@stellar-resistance/engine";
 import { type Ref, useMemo, useRef, useState } from "react";
 import {
@@ -25,13 +26,14 @@ const regionTypeLabels: Record<RegionType, string> = {
   urban: "Urban",
 };
 
-export function PlanetViewer({ planets }: { planets: readonly Planet[] }) {
+export function PlanetViewer({ world }: { world: World }) {
+  const { planets } = world;
   const [filterText, setFilterText] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { contains } = useFilter({ sensitivity: "base" });
   const listRef = useRef<HTMLElement>(null);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
-  const tickReport = useMemo(() => tick(planets).report, [planets]);
+  const tickReport = useMemo(() => tick(world).report, [world]);
 
   const visiblePlanets = planets.filter((planet) =>
     contains(planet.name, filterText),
