@@ -5,8 +5,6 @@ export type RegionType = "rural" | "urban";
 export interface Region {
   readonly id: string;
   readonly type: RegionType;
-  // The region's carrying capacity: the most units of production it
-  // produces per tick, however many pops work it.
   readonly productionCap: number;
   readonly pops: readonly Pop[];
 }
