@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { createPlanet, createPop, createRegion } from "./index";
+import { createPlanet, createRegion } from "./index";
 
 describe("createPlanet", () => {
   const rural = createRegion({
     id: "r1",
     type: "rural",
-    pops: [createPop({ id: "p1", size: 100 })],
+    productivity: 0.6,
+    pops: [],
   });
 
   test("creates a planet with its regions", () => {
@@ -18,11 +19,7 @@ describe("createPlanet", () => {
     const regions = [rural];
     const planet = createPlanet({ id: "p1", name: "Ferrix", regions });
     regions.push(
-      createRegion({
-        id: "r2",
-        type: "urban",
-        pops: [createPop({ id: "p2", size: 100 })],
-      }),
+      createRegion({ id: "r2", type: "urban", productivity: 0.9, pops: [] }),
     );
     expect(planet.regions).toHaveLength(1);
   });

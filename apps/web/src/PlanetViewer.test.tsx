@@ -16,17 +16,38 @@ const planets = [
       createRegion({
         id: "veyra-1",
         type: "urban",
+        productivity: 1,
         pops: [
-          createPop({ id: "veyra-1-1", size: 4200 }),
-          createPop({ id: "veyra-1-2", size: 1500 }),
+          createPop({
+            id: "veyra-1-1",
+            size: 4200,
+            expectedStandardOfLiving: 0.5,
+          }),
+          createPop({
+            id: "veyra-1-2",
+            size: 1500,
+            expectedStandardOfLiving: 0.2,
+          }),
         ],
       }),
       createRegion({
         id: "veyra-2",
         type: "rural",
-        pops: [createPop({ id: "veyra-2-1", size: 800 })],
+        productivity: 0.6,
+        pops: [
+          createPop({
+            id: "veyra-2-1",
+            size: 800,
+            expectedStandardOfLiving: 0.5,
+          }),
+        ],
       }),
-      createRegion({ id: "veyra-3", type: "rural", pops: [] }),
+      createRegion({
+        id: "veyra-3",
+        type: "rural",
+        productivity: 0.6,
+        pops: [],
+      }),
     ],
   }),
   createPlanet({
@@ -36,7 +57,14 @@ const planets = [
       createRegion({
         id: "imbrel-1",
         type: "rural",
-        pops: [createPop({ id: "imbrel-1-1", size: 300 })],
+        productivity: 0.6,
+        pops: [
+          createPop({
+            id: "imbrel-1-1",
+            size: 300,
+            expectedStandardOfLiving: 0.5,
+          }),
+        ],
       }),
     ],
   }),
@@ -80,6 +108,27 @@ describe("on wide viewports", () => {
     await expect.element(screen.getByText("1,500 people")).toBeVisible();
     await expect.element(screen.getByText("800 people")).toBeVisible();
     await expect.element(screen.getByText("Unpopulated")).toBeVisible();
+  });
+
+  test("shows each region's economy for one tick", async () => {
+    const screen = await render(<PlanetViewer planets={planets} />);
+    await screen.getByRole("option", { name: "Veyra" }).click();
+    // The urban region: productivity 1.0, 5,700 people.
+    await expect
+      .element(screen.getByText("1.0", { exact: true }))
+      .toBeVisible();
+    await expect
+      .element(screen.getByText("5,700", { exact: true }))
+      .toBeVisible();
+    await expect
+      .element(screen.getByText("2,160", { exact: true }))
+      .toBeVisible();
+    await expect
+      .element(screen.getByText("3,540", { exact: true }))
+      .toBeVisible();
+    await expect
+      .element(screen.getByText("(expected standard of living 0.2)"))
+      .toBeVisible();
     await expect
       .element(screen.getByRole("option", { name: "Imbrel" }))
       .toBeVisible();
