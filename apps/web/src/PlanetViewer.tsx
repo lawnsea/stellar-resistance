@@ -1,5 +1,10 @@
-import type { Planet, RegionType } from "@stellar-resistance/engine";
-import { type Ref, useRef, useState } from "react";
+import {
+  type Planet,
+  type RegionType,
+  type TickReport,
+  tick,
+} from "@stellar-resistance/engine";
+import { type Ref, useMemo, useRef, useState } from "react";
 import {
   Button,
   Heading,
@@ -17,12 +22,24 @@ const regionTypeLabels: Record<RegionType, string> = {
   urban: "Urban",
 };
 
+function formatAmount(value: number): string {
+  return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function formatFraction(value: number): string {
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function PlanetViewer({ planets }: { planets: readonly Planet[] }) {
   const [filterText, setFilterText] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { contains } = useFilter({ sensitivity: "base" });
   const listRef = useRef<HTMLElement>(null);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
+  const tickReport = useMemo(() => tick(planets), [planets]);
 
   const visiblePlanets = planets.filter((planet) =>
     contains(planet.name, filterText),
@@ -105,6 +122,7 @@ export function PlanetViewer({ planets }: { planets: readonly Planet[] }) {
         {selectedPlanet ? (
           <PlanetDetails
             planet={selectedPlanet}
+            tickReport={tickReport}
             headingRef={detailsHeadingRef}
             onBack={back}
           />
@@ -118,10 +136,12 @@ export function PlanetViewer({ planets }: { planets: readonly Planet[] }) {
 
 function PlanetDetails({
   planet,
+  tickReport,
   headingRef,
   onBack,
 }: {
   planet: Planet;
+  tickReport: TickReport;
   headingRef: Ref<HTMLHeadingElement>;
   onBack: () => void;
 }) {
@@ -148,14 +168,26 @@ function PlanetDetails({
         >
           Regions
         </Heading>
-        <ul className="mt-2 list-disc pl-5">
+        <ul className="mt-2 flex list-disc flex-col gap-3 pl-5">
           {planet.regions.map((region) => (
             <li key={region.id}>
-              <span>{regionTypeLabels[region.type]}</span>
+              <span className="font-medium">
+                {regionTypeLabels[region.type]}
+              </span>
+              <RegionEconomy
+                productivity={region.productivity}
+                economy={tickReport[region.id]}
+              />
               {region.pops.length > 0 ? (
                 <ul className="list-[circle] pl-5 text-slate-300">
                   {region.pops.map((pop) => (
-                    <li key={pop.id}>{pop.size.toLocaleString()} people</li>
+                    <li key={pop.id}>
+                      <span>{formatAmount(pop.size)} people</span>{" "}
+                      <span className="text-slate-400">
+                        (expected standard of living{" "}
+                        {formatFraction(pop.expectedStandardOfLiving)})
+                      </span>
+                    </li>
                   ))}
                 </ul>
               ) : (
@@ -166,5 +198,34 @@ function PlanetDetails({
         </ul>
       </div>
     </>
+  );
+}
+
+function RegionEconomy({
+  productivity,
+  economy,
+}: {
+  productivity: number;
+  economy: TickReport[string] | undefined;
+}) {
+  const stats: [string, string][] = [
+    ["Productivity", formatFraction(productivity)],
+  ];
+  if (economy) {
+    stats.push(
+      ["Production", formatAmount(economy.production)],
+      ["Consumption", formatAmount(economy.consumption)],
+      ["Surplus", formatAmount(economy.surplus)],
+    );
+  }
+  return (
+    <dl className="flex flex-wrap gap-x-4 text-sm">
+      {stats.map(([label, value]) => (
+        <div key={label} className="flex gap-1">
+          <dt className="text-slate-400">{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
