@@ -8,16 +8,15 @@ export interface GameState {
   readonly planets: readonly PlanetState[];
 }
 
-export class Game implements Stateful<GameState>, Tickable<Game> {
-  private _state: GameState;
+export class Game implements Stateful<GameState>, Tickable {
+  private _state: Omit<GameState, "planets">;
+  private _planets: readonly Planet[] = [];
   private readonly config: EngineConfig;
 
   constructor(state: GameState, config: EngineConfig = defaultConfig) {
-    this._state = {
-      factions: [...state.factions],
-      planets: [...state.planets],
-    };
     this.config = config;
+    this._state = { factions: [] };
+    this.setState(state);
   }
 
   get factions(): readonly Faction[] {
@@ -25,27 +24,28 @@ export class Game implements Stateful<GameState>, Tickable<Game> {
   }
 
   get planets(): readonly Planet[] {
-    return this._state.planets.map((planet) => new Planet(planet, this.config));
+    return this._planets;
   }
 
   getState(): GameState {
-    return this._state;
+    return {
+      ...this._state,
+      planets: this._planets.map((planet) => planet.getState()),
+    };
   }
 
   setState(state: GameState): void {
-    this._state = state;
+    this._state = { factions: [...state.factions] };
+    this._planets = state.planets.map(
+      (planet) => new Planet(planet, this.config),
+    );
   }
 
-  tick(n = 1): Game {
-    let state = this._state;
+  tick(n = 1): void {
     for (let i = 0; i < n; i++) {
-      state = {
-        factions: state.factions,
-        planets: state.planets.map((planet) =>
-          new Planet(planet, this.config).tick().getState(),
-        ),
-      };
+      for (const planet of this._planets) {
+        planet.tick();
+      }
     }
-    return new Game(state, this.config);
   }
 }

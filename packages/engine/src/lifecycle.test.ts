@@ -58,7 +58,9 @@ describe("Region.tick", () => {
       productionCap: 1e9,
       pops: [pop],
     });
-    return new Region(region, config).tick().pops;
+    const ticked = new Region(region, config);
+    ticked.tick();
+    return ticked.pops;
   }
 
   test("splits a pop that grows past the maximum during the tick", () => {

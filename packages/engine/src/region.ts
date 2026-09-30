@@ -22,7 +22,7 @@ export function createRegion(fields: RegionState): RegionState {
   return { id, type, productionCap, pops: [...fields.pops] };
 }
 
-export class Region implements Stateful<RegionState>, Tickable<Region> {
+export class Region implements Stateful<RegionState>, Tickable {
   private _state: RegionState;
   private readonly config: EngineConfig;
 
@@ -55,11 +55,9 @@ export class Region implements Stateful<RegionState>, Tickable<Region> {
     this._state = state;
   }
 
-  tick(n = 1): Region {
-    let state = this._state;
+  tick(n = 1): void {
     for (let i = 0; i < n; i++) {
-      state = nextRegionState(state, this.config);
+      this._state = nextRegionState(this._state, this.config);
     }
-    return new Region(state, this.config);
   }
 }

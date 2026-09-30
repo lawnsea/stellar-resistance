@@ -1,8 +1,10 @@
-import { testGame } from "@stellar-resistance/engine";
+import { createTestGame } from "@stellar-resistance/engine";
+import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { PlanetViewer } from "./PlanetViewer";
 
 export function App() {
+  const [game] = useState(createTestGame);
   return (
     <div className="flex h-dvh flex-col bg-slate-950 text-slate-100">
       <header className="border-b border-slate-800 px-4 py-3">
@@ -11,7 +13,7 @@ export function App() {
         </Heading>
       </header>
       <main className="flex min-h-0 flex-1">
-        <PlanetViewer game={testGame} />
+        <PlanetViewer game={game} />
       </main>
     </div>
   );

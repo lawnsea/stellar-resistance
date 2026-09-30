@@ -36,7 +36,9 @@ function tickRegion(
   n = 1,
   engineConfig: EngineConfig = config,
 ): RegionState {
-  return new Region(r, engineConfig).tick(n).getState();
+  const region = new Region(r, engineConfig);
+  region.tick(n);
+  return region.getState();
 }
 
 describe("computeRegionEconomy", () => {
@@ -130,21 +132,25 @@ describe("Region.tick", () => {
     expect(next.pops[0]?.actualStandardOfLiving).toBeCloseTo(0.8);
   });
 
-  test("returns a new region without changing the original", () => {
+  test("tick replaces its state without mutating the previous state", () => {
     const r = region([pop("a", 1000, 0.5, 2)]);
     const snapshot = JSON.parse(JSON.stringify(r));
-    const original = new Region(r, config);
-    const next = original.tick();
-    expect(original.getState()).toEqual(snapshot);
-    expect(next).not.toBe(original);
+    const ticked = new Region(r, config);
+    const before = ticked.getState();
+    ticked.tick();
+    expect(before).toEqual(snapshot);
+    expect(ticked.getState()).not.toEqual(snapshot);
   });
 
   test("tick(n) equals n single ticks", () => {
     const r = region([pop("a", 1000, 0.5, 2), pop("b", 700, 0.5, 1)]);
-    const once = new Region(r, config);
-    expect(once.tick(5).getState()).toEqual(
-      once.tick().tick().tick().tick().tick().getState(),
-    );
+    const all = new Region(r, config);
+    all.tick(5);
+    const oneAtATime = new Region(r, config);
+    for (let i = 0; i < 5; i++) {
+      oneAtATime.tick();
+    }
+    expect(all.getState()).toEqual(oneAtATime.getState());
   });
 
   test("pops fully provided for run a surplus at the default production rate", () => {

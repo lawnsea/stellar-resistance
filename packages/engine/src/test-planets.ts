@@ -98,7 +98,6 @@ export const testPlanets: readonly PlanetState[] = [
   }),
 ];
 
-export const testGame = new Game({
-  factions: [],
-  planets: testPlanets,
-});
+export function createTestGame(): Game {
+  return new Game({ factions: [], planets: testPlanets });
+}

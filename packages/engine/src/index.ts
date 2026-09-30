@@ -15,5 +15,5 @@ export {
   type RegionState,
   type RegionType,
 } from "./region";
-export { testGame, testPlanets } from "./test-planets";
+export { createTestGame, testPlanets } from "./test-planets";
 export type { Stateful, Tickable } from "./traits";

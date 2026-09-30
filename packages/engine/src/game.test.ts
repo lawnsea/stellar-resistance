@@ -53,27 +53,39 @@ describe("Game", () => {
     expect(other.getState()).toEqual(game.getState());
   });
 
-  test("tick carries factions through and ticks every planet", () => {
-    const next = new Game(data).tick();
-    expect(next.factions).toEqual([faction]);
-    expect(next.planets[0]?.getState()).toEqual(
-      new Planet(planet).tick().getState(),
-    );
+  test("getState builds its data from its planets' getState", () => {
+    const planetGetState = vi.spyOn(Planet.prototype, "getState");
+    new Game(data).getState();
+    expect(planetGetState).toHaveBeenCalledTimes(1);
+    vi.restoreAllMocks();
   });
 
-  test("tick returns a new game without changing the original", () => {
+  test("tick carries factions through and ticks every planet", () => {
     const game = new Game(data);
-    const snapshot = JSON.parse(JSON.stringify(game.getState()));
-    const next = game.tick();
-    expect(game.getState()).toEqual(snapshot);
-    expect(next).not.toBe(game);
+    game.tick();
+    const expected = new Planet(planet);
+    expected.tick();
+    expect(game.factions).toEqual([faction]);
+    expect(game.planets[0]?.getState()).toEqual(expected.getState());
+  });
+
+  test("tick updates the game without mutating earlier states", () => {
+    const game = new Game(data);
+    const before = game.getState();
+    const snapshot = JSON.parse(JSON.stringify(before));
+    game.tick();
+    expect(before).toEqual(snapshot);
+    expect(game.getState()).not.toEqual(snapshot);
   });
 
   test("tick(n) equals n single ticks", () => {
-    const game = new Game(data);
-    expect(game.tick(3).getState()).toEqual(
-      game.tick().tick().tick().getState(),
-    );
+    const all = new Game(data);
+    all.tick(3);
+    const oneAtATime = new Game(data);
+    oneAtATime.tick();
+    oneAtATime.tick();
+    oneAtATime.tick();
+    expect(all.getState()).toEqual(oneAtATime.getState());
   });
 });
 
@@ -110,23 +122,53 @@ describe("Planet", () => {
     expect(p.regions[0]?.getState()).toEqual(region);
   });
 
-  test("tick ticks every region", () => {
-    expect(new Planet(planet).tick().getState().regions[0]).toEqual(
-      new Region(region).tick().getState(),
+  test("getState builds its data from its regions' getState", () => {
+    const regionGetState = vi.spyOn(Region.prototype, "getState");
+    const p = new Planet(
+      createPlanet({ ...planet, regions: [region, region] }),
     );
+    expect(p.getState()).toEqual({ ...planet, regions: [region, region] });
+    expect(regionGetState).toHaveBeenCalledTimes(2);
+    vi.restoreAllMocks();
+  });
+
+  test("keeps the same region instances across ticks", () => {
+    const p = new Planet(planet);
+    const [before] = p.regions;
+    p.tick();
+    expect(p.regions[0]).toBe(before);
+  });
+
+  test("tick ticks every region", () => {
+    const p = new Planet(planet);
+    p.tick();
+    const expected = new Region(region);
+    expected.tick();
+    expect(p.getState().regions[0]).toEqual(expected.getState());
   });
 
   test("tick(n) equals n single ticks", () => {
-    const p = new Planet(planet);
-    expect(p.tick(3).getState()).toEqual(p.tick().tick().tick().getState());
+    const all = new Planet(planet);
+    all.tick(3);
+    const oneAtATime = new Planet(planet);
+    oneAtATime.tick();
+    oneAtATime.tick();
+    oneAtATime.tick();
+    expect(all.getState()).toEqual(oneAtATime.getState());
   });
 
   test("gets and sets its state", () => {
     const p = new Planet(planet);
-    const other = createPlanet({ ...planet, name: "Aldhani" });
+    const urban = createRegion({ ...region, id: "r2", type: "urban" });
+    const other = createPlanet({
+      ...planet,
+      name: "Aldhani",
+      regions: [urban],
+    });
     p.setState(other);
     expect(p.name).toBe("Aldhani");
-    expect(p.getState()).toBe(other);
+    expect(p.regions.map((r) => r.type)).toEqual(["urban"]);
+    expect(p.getState()).toEqual(other);
   });
 });
 

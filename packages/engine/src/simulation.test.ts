@@ -3,15 +3,18 @@ import {
   createPlanet,
   createPop,
   createRegion,
+  createTestGame,
   defaultConfig,
   Game,
   type Region,
-  testGame,
 } from "./index";
 import { exactSize } from "./pop";
 
+// Ticks a copy, so the same starting game can be run more than once.
 function run(game: Game, ticks: number): Game {
-  return game.tick(ticks);
+  const copy = new Game(game.getState());
+  copy.tick(ticks);
+  return copy;
 }
 
 function singleRegion(
@@ -99,14 +102,14 @@ describe("over many ticks", () => {
   });
 
   test("the same input produces the same result", () => {
-    expect(run(testGame, 200).getState()).toEqual(
-      run(testGame, 200).getState(),
+    expect(run(createTestGame(), 200).getState()).toEqual(
+      run(createTestGame(), 200).getState(),
     );
   });
 });
 
 describe("the test planets over 1,000 ticks", () => {
-  const after = run(testGame, 1000);
+  const after = run(createTestGame(), 1000);
   const pops = after.planets.flatMap((planet) =>
     planet.regions.flatMap((r) => r.pops),
   );

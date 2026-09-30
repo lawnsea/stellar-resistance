@@ -3,6 +3,6 @@ export interface Stateful<S> {
   setState(state: S): void;
 }
 
-export interface Tickable<T> {
-  tick(n?: number): T;
+export interface Tickable {
+  tick(n?: number): void;
 }

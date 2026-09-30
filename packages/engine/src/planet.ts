@@ -15,13 +15,15 @@ export function createPlanet(fields: PlanetState): PlanetState {
   return { id: fields.id, name: fields.name, regions: [...fields.regions] };
 }
 
-export class Planet implements Stateful<PlanetState>, Tickable<Planet> {
-  private _state: PlanetState;
+export class Planet implements Stateful<PlanetState>, Tickable {
+  private _state: Omit<PlanetState, "regions">;
+  private _regions: readonly Region[] = [];
   private readonly config: EngineConfig;
 
   constructor(state: PlanetState, config: EngineConfig = defaultConfig) {
-    this._state = state;
     this.config = config;
+    this._state = { id: state.id, name: state.name };
+    this.setState(state);
   }
 
   get id(): string {
@@ -33,27 +35,27 @@ export class Planet implements Stateful<PlanetState>, Tickable<Planet> {
   }
 
   get regions(): readonly Region[] {
-    return this._state.regions.map((region) => new Region(region, this.config));
+    return this._regions;
   }
 
   getState(): PlanetState {
-    return this._state;
+    return {
+      ...this._state,
+      regions: this._regions.map((region) => region.getState()),
+    };
   }
 
   setState(state: PlanetState): void {
-    this._state = state;
+    const { regions, ...own } = state;
+    this._state = own;
+    this._regions = regions.map((region) => new Region(region, this.config));
   }
 
-  tick(n = 1): Planet {
-    let state = this._state;
+  tick(n = 1): void {
     for (let i = 0; i < n; i++) {
-      state = {
-        ...state,
-        regions: state.regions.map((region) =>
-          new Region(region, this.config).tick().getState(),
-        ),
-      };
+      for (const region of this._regions) {
+        region.tick();
+      }
     }
-    return new Planet(state, this.config);
   }
 }
