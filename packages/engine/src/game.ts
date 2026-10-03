@@ -53,6 +53,16 @@ export class Game implements Stateful<GameState>, Tickable {
           }
           faction.addCell(cell);
         }
+        for (const item of region.infrastructure) {
+          if (
+            item.controllerId !== planet.planetaryFaction.id &&
+            !byId.has(item.controllerId)
+          ) {
+            throw new Error(
+              `Infrastructure ${item.id} is controlled by faction ${item.controllerId}, which isn't in the game`,
+            );
+          }
+        }
       }
     }
   }

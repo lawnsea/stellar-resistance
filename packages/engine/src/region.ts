@@ -1,5 +1,6 @@
 import { Cell, type CellState, createCell } from "./cell";
 import { defaultConfig, type EngineConfig } from "./config";
+import { Infrastructure, type InfrastructureState } from "./infrastructure";
 import { exactSize, type Pop, type PopState } from "./pop";
 import type { Stateful, Tickable } from "./traits";
 
@@ -12,6 +13,7 @@ export interface RegionState {
   readonly production: number;
   readonly regionalCell: CellState;
   readonly cells: readonly CellState[];
+  readonly infrastructure: readonly InfrastructureState[];
 }
 
 export interface RegionFields {
@@ -21,6 +23,7 @@ export interface RegionFields {
   readonly production?: number;
   readonly pops?: readonly PopState[];
   readonly cells?: readonly CellState[];
+  readonly infrastructure?: readonly InfrastructureState[];
 }
 
 export function createRegion(
@@ -48,7 +51,15 @@ export function createRegion(
       `Region ${id} production must be at least 0, got ${production}`,
     );
   }
-  return { id, type, productionCap, production, regionalCell, cells };
+  return {
+    id,
+    type,
+    productionCap,
+    production,
+    regionalCell,
+    cells,
+    infrastructure: [...(fields.infrastructure ?? [])],
+  };
 }
 
 function computeProduction(
@@ -88,9 +99,13 @@ export function computeRegionEconomy(region: RegionState): RegionEconomy {
 }
 
 export class Region implements Stateful<RegionState>, Tickable {
-  private _state: Omit<RegionState, "regionalCell" | "cells">;
+  private _state: Omit<
+    RegionState,
+    "regionalCell" | "cells" | "infrastructure"
+  >;
   private _regionalCell!: Cell;
   private _cells: readonly Cell[] = [];
+  private _infrastructure: readonly Infrastructure[] = [];
   private readonly config: EngineConfig;
 
   constructor(state: RegionState, config: EngineConfig = defaultConfig) {
@@ -123,6 +138,10 @@ export class Region implements Stateful<RegionState>, Tickable {
     return this._cells;
   }
 
+  get infrastructure(): readonly Infrastructure[] {
+    return this._infrastructure;
+  }
+
   get pops(): readonly Pop[] {
     return [this._regionalCell, ...this._cells].flatMap((cell) => cell.pops);
   }
@@ -132,11 +151,12 @@ export class Region implements Stateful<RegionState>, Tickable {
       ...this._state,
       regionalCell: this._regionalCell.getState(),
       cells: this._cells.map((cell) => cell.getState()),
+      infrastructure: this._infrastructure.map((item) => item.getState()),
     };
   }
 
   setState(state: RegionState): void {
-    const { regionalCell, cells, ...own } = state;
+    const { regionalCell, cells, infrastructure, ...own } = state;
     for (const cell of [regionalCell, ...cells]) {
       if (cell.region !== own.id) {
         throw new Error(
@@ -147,6 +167,9 @@ export class Region implements Stateful<RegionState>, Tickable {
     this._state = own;
     this._regionalCell = new Cell(regionalCell, this.config, this);
     this._cells = cells.map((cell) => new Cell(cell, this.config, this));
+    this._infrastructure = infrastructure.map(
+      (item) => new Infrastructure(item),
+    );
   }
 
   tick(n = 1): void {
@@ -154,6 +177,7 @@ export class Region implements Stateful<RegionState>, Tickable {
       this.distribute();
       this.tickPops();
       this.splitAndRemove();
+      this.revertAbandonedInfrastructure();
       this.produce();
     }
   }
@@ -179,6 +203,20 @@ export class Region implements Stateful<RegionState>, Tickable {
   private splitAndRemove(): void {
     for (const cell of [this._regionalCell, ...this._cells]) {
       cell.splitAndRemovePops();
+    }
+  }
+
+  private revertAbandonedInfrastructure(): void {
+    const present = new Set(
+      [this._regionalCell, ...this._cells]
+        .filter((cell) => cell.pops.length > 0)
+        .map((cell) => cell.factionId),
+    );
+    const planetaryFaction = this._regionalCell.factionId;
+    for (const item of this._infrastructure) {
+      if (!present.has(item.controllerId)) {
+        item.setState({ ...item.getState(), controller: planetaryFaction });
+      }
     }
   }
 
