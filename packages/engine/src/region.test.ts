@@ -1,13 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
-  birthRate,
   computeRegionEconomy,
   createPop,
   createRegion,
-  deathRate,
   defaultConfig,
   type EngineConfig,
-  type Pop,
+  type PopState,
   Region,
   type RegionState,
 } from "./index";
@@ -28,8 +26,16 @@ function pop(id: string, size: number, actual = 1, expected = 1) {
   });
 }
 
-function region(pops: ReturnType<typeof pop>[], productionCap = 1e9) {
-  return createRegion({ id: "r1", type: "urban", productionCap, pops });
+function region(
+  pops: ReturnType<typeof pop>[],
+  productionCap = 1e9,
+  production?: number,
+  engineConfig: EngineConfig = config,
+) {
+  return createRegion(
+    { id: "r1", type: "urban", productionCap, pops, production },
+    engineConfig,
+  );
 }
 
 function tickRegion(
@@ -50,20 +56,59 @@ const base = createPop({
 });
 
 describe("createRegion", () => {
-  const pop = createPop({ id: "p1", size: 100, expectedStandardOfLiving: 1 });
+  const onePop = createPop({
+    id: "p1",
+    size: 100,
+    expectedStandardOfLiving: 1,
+  });
   const fields = {
     id: "r1",
     type: "rural" as const,
     productionCap: 1000,
-    pops: [pop],
+    pops: [onePop],
   };
 
   test("creates a region with its pops", () => {
-    expect(createRegion(fields)).toEqual(fields);
+    expect(createRegion(fields)).toEqual({
+      ...fields,
+      production: 100 * defaultConfig.productionRate,
+    });
   });
 
+  test("computes production from its pops when not given", () => {
+    // size × rate × min(1, actual standard of living), capped.
+    const r = region(
+      [pop("a", 1000, 0.5), pop("b", 3000, 1.5)],
+      1e9,
+      undefined,
+      {
+        ...config,
+        productionRate: 2,
+      },
+    );
+    expect(r.production).toBeCloseTo(1000 * 2 * 0.5 + 3000 * 2 * 1);
+  });
+
+  test("caps computed production at the production cap", () => {
+    expect(region([pop("a", 1000, 1)], 800).production).toBe(800);
+    expect(region([pop("a", 1000, 1)], 1200).production).toBe(1000);
+  });
+
+  test("keeps a given production", () => {
+    expect(region([pop("a", 1000, 1)], 1e9, 250).production).toBe(250);
+  });
+
+  test.each([-1, Number.NaN, Number.POSITIVE_INFINITY])(
+    "rejects production %s",
+    (production) => {
+      expect(() => createRegion({ ...fields, production })).toThrow(
+        "Region r1 production must be at least 0",
+      );
+    },
+  );
+
   test("copies the pops array", () => {
-    const pops = [pop];
+    const pops = [onePop];
     const region = createRegion({ ...fields, pops });
     pops.push(createPop({ id: "p2", size: 200, expectedStandardOfLiving: 1 }));
     expect(region.pops).toHaveLength(1);
@@ -90,42 +135,24 @@ describe("createRegion", () => {
 });
 
 describe("computeRegionEconomy", () => {
-  test("production is the sum of size × rate × min(1, actual standard of living)", () => {
-    const r = region([pop("a", 1000, 0.5), pop("b", 3000, 1.5)]);
+  test("reports the production from the region's last tick", () => {
     expect(
-      computeRegionEconomy(r, { ...config, productionRate: 2 }).production,
-    ).toBeCloseTo(1000 * 2 * 0.5 + 3000 * 2 * 1);
+      computeRegionEconomy(region([pop("a", 1000)], 1e9, 640)).production,
+    ).toBe(640);
   });
 
   test("consumption is one unit per person", () => {
     const r = region([pop("a", 1000), pop("b", 3000)]);
-    expect(computeRegionEconomy(r, config).consumption).toBe(4000);
+    expect(computeRegionEconomy(r).consumption).toBe(4000);
   });
 
   test("surplus is production minus consumption", () => {
-    const r = region([pop("a", 1000, 0.8)]);
-    const { production, consumption, surplus } = computeRegionEconomy(
-      r,
-      config,
-    );
-    expect(surplus).toBeCloseTo(production - consumption);
-  });
-
-  test("production never exceeds the region's cap", () => {
-    // Uncapped: 1000 × 1 × 1 = 1000 units.
-    const r = region([pop("a", 1000, 1)], 800);
-    const economy = computeRegionEconomy(r, config);
-    expect(economy.production).toBe(800);
+    const economy = computeRegionEconomy(region([pop("a", 1000)], 1e9, 800));
     expect(economy.surplus).toBe(800 - 1000);
   });
 
-  test("production below the cap is unaffected", () => {
-    const r = region([pop("a", 1000, 1)], 1200);
-    expect(computeRegionEconomy(r, config).production).toBe(1000);
-  });
-
   test("an unpopulated region produces and consumes nothing", () => {
-    expect(computeRegionEconomy(region([]), config)).toEqual({
+    expect(computeRegionEconomy(region([]))).toEqual({
       production: 0,
       consumption: 0,
       surplus: 0,
@@ -140,28 +167,41 @@ test("a pop that starves for several ticks comes to expect starvation", () => {
 });
 
 describe("Region.tick", () => {
-  test("splits production among pops by size", () => {
-    // Production: 1000 × 0.5 + 3000 × 1 = 3500 units for 4000 people.
+  test("distributes last tick's production among pops by size", () => {
+    // 3500 units for 4000 people.
     const [a, b] = tickRegion(
-      region([pop("a", 1000, 0.5), pop("b", 3000, 1)]),
+      region([pop("a", 1000), pop("b", 3000)], 1e9, 3500),
     ).pops;
     expect(a?.actualStandardOfLiving).toBeCloseTo(3500 / 4000);
     expect(b?.actualStandardOfLiving).toBeCloseTo(3500 / 4000);
   });
 
   test("a pop of 500 whose share is 500 units has an actual standard of living of 1.0", () => {
-    const r = region([pop("a", 500, 1)]);
-    expect(computeRegionEconomy(r, config).production).toBe(500);
-    expect(tickRegion(r).pops[0]?.actualStandardOfLiving).toBe(1);
+    expect(
+      tickRegion(region([pop("a", 500)], 1e9, 500)).pops[0]
+        ?.actualStandardOfLiving,
+    ).toBe(1);
   });
 
   test("updates expected standard of living toward the new actual", () => {
-    const next = tickRegion(region([pop("a", 1000, 1, 2)]), 1, {
-      ...config,
-      productionRate: 1.5,
-    });
     // Actual becomes 1.5; expected moves halfway from 2 toward 1.5.
+    const next = tickRegion(region([pop("a", 1000, 1, 2)], 1e9, 1500));
     expect(next.pops[0]?.expectedStandardOfLiving).toBeCloseTo(1.75);
+  });
+
+  test("produces size × rate × min(1, new actual standard of living) for the next tick", () => {
+    const next = tickRegion(region([pop("a", 1000, 1)], 1e9, 500));
+    const [ticked] = next.pops;
+    expect(ticked?.actualStandardOfLiving).toBeCloseTo(0.5);
+    expect(next.production).toBeCloseTo(
+      (ticked ? exactSize(ticked) : 0) * config.productionRate * 0.5,
+    );
+  });
+
+  test("caps the next tick's production", () => {
+    expect(tickRegion(region([pop("a", 1000)], 800, 1000)).production).toBe(
+      800,
+    );
   });
 
   test("a capped region's pops get the capped share", () => {
@@ -192,42 +232,8 @@ describe("Region.tick", () => {
 
   test("pops fully provided for run a surplus at the default production rate", () => {
     expect(defaultConfig.productionRate).toBeGreaterThan(1);
-    const r = region([pop("a", 1000, 1)]);
+    const r = region([pop("a", 1000, 1)], 1e9, undefined, defaultConfig);
     expect(computeRegionEconomy(r).surplus).toBeGreaterThan(0);
-  });
-});
-
-describe("births and deaths", () => {
-  function tickPop(p: ReturnType<typeof pop>, times = 1) {
-    const next = tickRegion(region([p]), times).pops[0];
-    if (!next) throw new Error("pop missing");
-    return next;
-  }
-
-  test("births and deaths follow the previous tick's standard of living", () => {
-    // Previous actual 1.5; this tick's actual becomes 1.0.
-    const next = tickPop(pop("a", 1000, 1.5));
-    const expected =
-      1000 + (birthRate(1.5, config) - deathRate(1.5, config)) * 1000;
-    expect(next.size).toBe(Math.floor(expected));
-  });
-
-  test("a starving pop shrinks", () => {
-    expect(tickPop(pop("a", 1000, 0)).size).toBeLessThan(1000);
-  });
-
-  test("fractional births accumulate across ticks", () => {
-    // A thriving pop of 40 gains less than one person per tick.
-    const thriving = { ...config, productionRate: 1.5 };
-    const growth = (birthRate(1.5, thriving) - deathRate(1.5, thriving)) * 40;
-    expect(growth).toBeLessThan(1);
-    const next = tickRegion(region([pop("a", 40, 1.5)]), 10, thriving);
-    expect(next.pops[0]?.size).toBeGreaterThan(40);
-  });
-
-  test("size in the API is always an integer", () => {
-    const next = tickPop(pop("a", 1234, 1.3), 3);
-    expect(Number.isInteger(next.size)).toBe(true);
   });
 });
 
@@ -236,7 +242,7 @@ describe("Region.tick splits and removes pops", () => {
   // removed.
   const steady = { ...defaultConfig, baseBirthRate: 0, baseDeathRate: 0 };
 
-  function popsAfterTick(pops: Pop[]): readonly Pop[] {
+  function popsAfterTick(pops: PopState[]): readonly PopState[] {
     const ticked = new Region(
       createRegion({ id: "r1", type: "urban", productionCap: 1e9, pops }),
       steady,
@@ -285,12 +291,15 @@ describe("Region.tick splitting and removal", () => {
       actualStandardOfLiving,
       expectedStandardOfLiving: 1,
     });
-    const region = createRegion({
-      id: "r1",
-      type: "urban",
-      productionCap: 1e9,
-      pops: [pop],
-    });
+    const region = createRegion(
+      {
+        id: "r1",
+        type: "urban",
+        productionCap: 1e9,
+        pops: [pop],
+      },
+      config,
+    );
     const ticked = new Region(region, config);
     ticked.tick();
     return ticked.pops;

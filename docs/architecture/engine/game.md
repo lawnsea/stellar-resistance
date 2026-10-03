@@ -1,6 +1,6 @@
 # Game
 
-`Game` holds the engine's whole game state: its factions and its planets. The game and its entity classes hold their children as instances and their own data as plain, immutable objects: ticking replaces those objects rather than changing them, and `getState()` assembles the whole tree as plain data, so it can be saved or sent between web workers. Each level ticks itself: the game ticks its planets, and each planet ticks its regions. Each level ticks its children exactly once per tick of its own, so every tick's effects are applied in order across the whole game.
+`Game` holds the engine's whole game state: its factions and its planets. The game and its entity classes hold their children as instances and their own data as plain, immutable objects: ticking replaces those objects rather than changing them, and `getState()` assembles the whole tree as plain data, so it can be saved or sent between web workers. Each level ticks itself: the game ticks its planets, and each planet ticks its regions. Each level ticks its children exactly once per tick of its own, so every tick's effects are applied in order across the whole game. See [tick](tick.md) for the sequence of a tick.
 
 ## API
 
