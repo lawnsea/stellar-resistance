@@ -2,7 +2,7 @@
 
 Regions are part of a planet and contain zero or more pops, held in the region's [cells](cell.md); a region with no pops is unpopulated. Regions don't have a name. Each has a type, which is rural or urban for now.
 
-A region's pops produce resources in units of production, where one unit meets one person's consumption requirement for a tick. Each tick, the region divides the production from its previous tick among its pops by size, and the pops live on that share. At the end of the tick, the pops produce for the next one: each produces its size × the production rate × its new actual standard of living, capped at 1.0, so underfed pops produce less. A region never produces more than its production cap, which represents its carrying capacity, however many pops work it.
+A region's pops produce resources in units of production, where one unit meets one person's consumption requirement for a tick. Each tick, the region's regional cell receives the production from its previous tick: it reserves enough for its own pops to have a standard of living of 1.0, pays its faction's [infrastructure](infrastructure.md) upkeep from the rest, and gives its pops the reserve plus anything left over, divided by size (see the [tick phases](../../architecture/engine/tick.md)). Pops in other cells receive nothing for now. At the end of the tick, the pops produce for the next one: each produces its size × the production rate × its new actual standard of living, capped at 1.0, so underfed pops produce less. A region never produces more than its production cap, which represents its carrying capacity, however many pops work it.
 
 ## API
 

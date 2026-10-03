@@ -10,6 +10,7 @@ export { Game, type GameState } from "./game";
 export {
   createInfrastructure,
   Infrastructure,
+  type InfrastructureFields,
   type InfrastructureState,
   type InfrastructureType,
 } from "./infrastructure";

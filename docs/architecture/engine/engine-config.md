@@ -19,6 +19,9 @@ Exported from `@stellar-resistance/engine`.
 | `prosperityCurvature` | `number` | How front-loaded the prosperity response is: higher values put more of it just above 1.0 |
 | `deprivationResponse` | `number` | How strongly deaths rise below 1.0; the death rate at 0.0 is the base × (1 + this) |
 | `deprivationCurvature` | `number` | How front-loaded the deprivation response is: higher values put more of it just below 1.0 |
+| `infrastructureUpkeep` | `Record<InfrastructureType, number>` | Units of production per tick each type of [infrastructure](../../design/entities/infrastructure.md) needs to stay in its current condition |
+| `infrastructureDamageRate` | `number` | Condition lost per tick by infrastructure that receives none of its upkeep; a partial shortfall loses the same share |
+| `infrastructureRepairRate` | `number` | Condition regained per tick by infrastructure that receives twice its upkeep; a smaller overage regains the same share |
 
 ### `defaultConfig: EngineConfig`
 
@@ -33,3 +36,6 @@ Exported from `@stellar-resistance/engine`.
 | `prosperityCurvature` | `1` | Starting value; makes the prosperity curve logarithmic in the standard of living |
 | `deprivationResponse` | `4` | Starting value; a starving pop loses 5% per tick |
 | `deprivationCurvature` | `4` | Starting value |
+| `infrastructureUpkeep` | `{ production: 100, extraction: 100 }` | Starting value |
+| `infrastructureDamageRate` | `0.1` | Starting value; unpaid infrastructure lasts 10 ticks |
+| `infrastructureRepairRate` | `0.05` | Starting value |

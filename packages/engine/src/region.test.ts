@@ -474,3 +474,107 @@ describe("Region infrastructure", () => {
     expect(r.infrastructure[0]?.controllerId).toBe("gov");
   });
 });
+
+describe("Region distribution and upkeep", () => {
+  const economy = {
+    ...defaultConfig,
+    productionRate: 1,
+    baseBirthRate: 0,
+    baseDeathRate: 0,
+    infrastructureUpkeep: { production: 100, extraction: 100 },
+    infrastructureDamageRate: 0.2,
+    infrastructureRepairRate: 0.1,
+  };
+
+  function infra(id: string, controller: string, fields = {}) {
+    return createInfrastructure(
+      { id, type: "production", controller, ...fields },
+      economy,
+    );
+  }
+
+  function tickWith(
+    production: number,
+    infrastructure: ReturnType<typeof infra>[],
+    resistancePops: PopState[] = [],
+  ): Region {
+    const data = createRegion(
+      {
+        id: "r1",
+        type: "urban",
+        productionCap: 1e9,
+        production,
+        pops: [pop("a", 1000)],
+        cells: [
+          createCell({
+            id: "res-1",
+            faction: "res",
+            region: "r1",
+            pops: resistancePops,
+          }),
+        ],
+        infrastructure,
+      },
+      economy,
+    );
+    const r = new Region(
+      { ...data, regionalCell: { ...data.regionalCell, faction: "gov" } },
+      economy,
+    );
+    r.tick();
+    return r;
+  }
+
+  test("reserves the regional cell's needs, pays upkeep, and shares the rest with its pops", () => {
+    // 1300 units: 1000 reserved, 100 upkeep, 200 left over for the pops.
+    const r = tickWith(1300, [infra("i1", "gov")]);
+    expect(r.regionalCell.pops[0]?.actualStandardOfLiving).toBeCloseTo(1.2);
+    expect(r.infrastructure[0]?.condition).toBe(1);
+  });
+
+  test("cuts every budget by the same share when upkeep can't be paid in full", () => {
+    // 1200 units: 1000 reserved, 200 for 400 of budgets, so each gets 50%.
+    const r = tickWith(1200, [
+      infra("i1", "gov"),
+      infra("i2", "gov", { upkeepBudget: 300 }),
+    ]);
+    expect(r.regionalCell.pops[0]?.actualStandardOfLiving).toBeCloseTo(1);
+    // i1: 50 of 100 needed, so 50% short at a damage rate of 0.2.
+    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.9);
+    // i2: 150 of 100 needed, so 50% over at a repair rate of 0.1.
+    expect(r.infrastructure[1]?.condition).toBe(1);
+  });
+
+  test("pops get everything when production doesn't cover their needs", () => {
+    const r = tickWith(800, [infra("i1", "gov")]);
+    expect(r.regionalCell.pops[0]?.actualStandardOfLiving).toBeCloseTo(0.8);
+    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.8);
+  });
+
+  test("a budget above the requirement repairs damage", () => {
+    const r = tickWith(2000, [
+      infra("i1", "gov", { upkeepBudget: 150, condition: 0.5 }),
+    ]);
+    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.55);
+  });
+
+  test("pops in other cells receive nothing", () => {
+    const r = tickWith(2000, [], [pop("b", 500)]);
+    expect(r.cells[0]?.pops[0]?.actualStandardOfLiving).toBe(0);
+    expect(r.regionalCell.pops[0]?.actualStandardOfLiving).toBeCloseTo(2);
+  });
+
+  test("other factions' infrastructure isn't paid", () => {
+    const r = tickWith(2000, [infra("i1", "res")], [pop("b", 500)]);
+    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.8);
+  });
+
+  test("infrastructure whose condition reaches 0.0 is destroyed and removed", () => {
+    const r = tickWith(
+      2000,
+      [infra("i1", "res", { condition: 0.1 })],
+      [pop("b", 500)],
+    );
+    expect(r.infrastructure).toEqual([]);
+  });
+});
