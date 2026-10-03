@@ -41,6 +41,14 @@ export function createPop(
   return { id, size, actualStandardOfLiving, expectedStandardOfLiving };
 }
 
+export function nextExpectedStandardOfLiving(
+  expected: number,
+  actual: number,
+  config: EngineConfig = defaultConfig,
+): number {
+  return expected + (actual - expected) * config.expectationAdjustmentRate;
+}
+
 interface PopState extends Pop {
   readonly exactSize: number;
 }

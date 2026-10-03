@@ -1,17 +1,19 @@
 export { defaultConfig, type EngineConfig } from "./config";
 export { birthRate, deathRate } from "./demography";
-export {
-  computeRegionEconomy,
-  nextExpectedStandardOfLiving,
-  type RegionEconomy,
-} from "./economy";
 export { createFaction, type Faction } from "./faction";
 export { Game, type GameState } from "./game";
 export { createPlanet, Planet, type PlanetState } from "./planet";
-export { createPop, type Pop, type PopFields } from "./pop";
 export {
+  createPop,
+  nextExpectedStandardOfLiving,
+  type Pop,
+  type PopFields,
+} from "./pop";
+export {
+  computeRegionEconomy,
   createRegion,
   Region,
+  type RegionEconomy,
   type RegionState,
   type RegionType,
 } from "./region";
