@@ -1,25 +1,31 @@
 # Pop
 
-Pops are groups of people who live in a region. Each pop has a size between 1 and a globally configurable maximum, which starts at 5000. Each person needs one unit of production per tick. A pop's actual standard of living is the share of that requirement it received last tick; 1.0 means the requirement was exactly met. Its expected standard of living is at least 0.0, and each tick it moves toward the actual standard of living, dampened by a configurable rate, so a pop that starves for long enough comes to expect starvation.
+Pops are groups of people who live in a region. Each pop has a size between 1 and a globally configurable maximum, which starts at 5000. Each person needs one unit of production per tick. A pop's actual standard of living is the share of that requirement it received this tick; 1.0 means the requirement was exactly met. Its expected standard of living is at least 0.0, and each tick it moves toward the actual standard of living, dampened by a configurable rate, so a pop that starves for long enough comes to expect starvation.
 
-Each tick (see the [tick phases](../../architecture/engine/tick.md)), a pop gains births (birth rate × size) and loses deaths (death rate × size). Both rates follow the pop's actual standard of living from the previous tick. At 1.0, each equals its base rate. Above 1.0, births rise and deaths fall; below 1.0, births fall and deaths rise. Each change has diminishing returns. The engine tracks size internally as a float, so fractional births and deaths accumulate across ticks; `size` is always the integer part. After all of a tick's changes are applied, a pop whose internal size is above the maximum is replaced by two new pops, each with half its internal size (5000.7 becomes 2500.35 and 2500.35), and a pop whose internal size is below 1 dies out and is removed. A region whose last pop dies out becomes unpopulated.
+Each tick (see the [tick phases](../../architecture/engine/tick.md)), a pop gains births (birth rate × size) and loses deaths (death rate × size). Both rates follow the actual standard of living the pop received this tick. At 1.0, each equals its base rate. Above 1.0, births rise and deaths fall; below 1.0, births fall and deaths rise. Each change has diminishing returns. The engine tracks size internally as a float, so fractional births and deaths accumulate across ticks; `size` is always the integer part. After every pop in a region has ticked, a pop whose internal size is above the maximum is replaced by two new pops, each with half its internal size (5000.7 becomes 2500.35 and 2500.35), and a pop whose internal size is below 1 dies out and is removed. A region whose last pop dies out becomes unpopulated.
 
 ## API
 
 Exported from `@stellar-resistance/engine`.
 
-### `Pop`
+### `PopState`
+
+A pop's plain data.
 
 | Field | Type | Description |
 |---|---|---|
 | `id` | `string` | Unique identifier |
 | `size` | `number` | Number of people; an integer from 1 to [`maxPopSize`](../../architecture/engine/engine-config.md), rounded down from the engine's internal size |
-| `actualStandardOfLiving` | `number` | Share of production received last tick ÷ size; at least 0.0 |
+| `actualStandardOfLiving` | `number` | Share of production received this tick ÷ size; at least 0.0 |
 | `expectedStandardOfLiving` | `number` | At least 0.0 |
 
-### `createPop(fields: PopFields, config?: EngineConfig): Pop`
+### `createPop(fields: PopFields, config?: EngineConfig): PopState`
 
-Creates a pop. `PopFields` is `Pop` with `actualStandardOfLiving` optional; it defaults to 1.0. Throws if `size` isn't an integer from 1 to `config.maxPopSize`, if `actualStandardOfLiving` is below 0.0, or if `expectedStandardOfLiving` is below 0.0. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
+Creates a pop's data. `PopFields` is `PopState` with `actualStandardOfLiving` optional; it defaults to 1.0. Throws if `size` isn't an integer from 1 to `config.maxPopSize`, if `actualStandardOfLiving` is below 0.0, or if `expectedStandardOfLiving` is below 0.0. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
+
+### `class Pop`
+
+Implements [`Stateful<PopState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Pop(state, config?)`. Getters: `id`, `size`, `actualStandardOfLiving`, and `expectedStandardOfLiving`. `receive(share)` gives the pop its share of the region's production, in units. `tick(n = 1)` advances the pop n ticks: each tick sets its actual standard of living to share ÷ size, applies births and deaths at the rates for that standard of living, and moves its expected standard of living toward it. Its [region](region.md) gives each pop its share before ticking it; a pop ticked more than once uses the same share each tick.
 
 ### `nextExpectedStandardOfLiving(expected: number, actual: number, config?: EngineConfig): number`
 

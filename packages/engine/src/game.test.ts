@@ -6,6 +6,7 @@ import {
   createRegion,
   Game,
   Planet,
+  Pop,
   Region,
 } from "./index";
 
@@ -178,7 +179,16 @@ describe("Region", () => {
     expect(r.id).toBe("r1");
     expect(r.type).toBe("rural");
     expect(r.productionCap).toBe(1e9);
-    expect(r.pops).toEqual(region.pops);
+    expect(r.production).toBe(region.production);
+    expect(r.pops[0]).toBeInstanceOf(Pop);
+    expect(r.pops.map((pop) => pop.getState())).toEqual(region.pops);
+  });
+
+  test("getState builds its data from its pops' getState", () => {
+    const popGetState = vi.spyOn(Pop.prototype, "getState");
+    expect(new Region(region).getState()).toEqual(region);
+    expect(popGetState).toHaveBeenCalledTimes(region.pops.length);
+    vi.restoreAllMocks();
   });
 
   test("gets and sets its state", () => {
@@ -186,6 +196,6 @@ describe("Region", () => {
     const other = createRegion({ ...region, type: "urban" });
     r.setState(other);
     expect(r.type).toBe("urban");
-    expect(r.getState()).toBe(other);
+    expect(r.getState()).toEqual(other);
   });
 });

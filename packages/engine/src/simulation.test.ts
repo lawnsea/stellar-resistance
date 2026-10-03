@@ -53,7 +53,7 @@ function region(game: Game, id = "r"): Region {
 }
 
 function population(r: Region): number {
-  return r.pops.reduce((total, pop) => total + exactSize(pop), 0);
+  return r.pops.reduce((total, pop) => total + exactSize(pop.getState()), 0);
 }
 
 describe("over many ticks", () => {

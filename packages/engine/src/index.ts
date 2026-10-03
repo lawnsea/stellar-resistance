@@ -6,14 +6,16 @@ export { createPlanet, Planet, type PlanetState } from "./planet";
 export {
   createPop,
   nextExpectedStandardOfLiving,
-  type Pop,
+  Pop,
   type PopFields,
+  type PopState,
 } from "./pop";
 export {
   computeRegionEconomy,
   createRegion,
   Region,
   type RegionEconomy,
+  type RegionFields,
   type RegionState,
   type RegionType,
 } from "./region";

@@ -1,11 +1,5 @@
 import { defaultConfig, type EngineConfig } from "./config";
-import { birthRate, deathRate } from "./demography";
-import {
-  exactSize,
-  nextExpectedStandardOfLiving,
-  type Pop,
-  withExactSize,
-} from "./pop";
+import { exactSize, Pop, type PopState, withExactSize } from "./pop";
 import type { Stateful, Tickable } from "./traits";
 
 export type RegionType = "rural" | "urban";
@@ -14,17 +8,48 @@ export interface RegionState {
   readonly id: string;
   readonly type: RegionType;
   readonly productionCap: number;
-  readonly pops: readonly Pop[];
+  readonly production: number;
+  readonly pops: readonly PopState[];
 }
 
-export function createRegion(fields: RegionState): RegionState {
+export interface RegionFields extends Omit<RegionState, "production"> {
+  readonly production?: number;
+}
+
+export function createRegion(
+  fields: RegionFields,
+  config: EngineConfig = defaultConfig,
+): RegionState {
   const { id, type, productionCap } = fields;
   if (!(productionCap > 0) || !Number.isFinite(productionCap)) {
     throw new Error(
       `Region ${id} production cap must be a positive number, got ${productionCap}`,
     );
   }
-  return { id, type, productionCap, pops: [...fields.pops] };
+  const pops = [...fields.pops];
+  const production =
+    fields.production ?? computeProduction(pops, productionCap, config);
+  if (!(production >= 0) || !Number.isFinite(production)) {
+    throw new Error(
+      `Region ${id} production must be at least 0, got ${production}`,
+    );
+  }
+  return { id, type, productionCap, production, pops };
+}
+
+function computeProduction(
+  pops: readonly PopState[],
+  productionCap: number,
+  config: EngineConfig,
+): number {
+  let production = 0;
+  for (const pop of pops) {
+    production +=
+      exactSize(pop) *
+      config.productionRate *
+      Math.min(1, pop.actualStandardOfLiving);
+  }
+  return Math.min(production, productionCap);
 }
 
 export interface RegionEconomy {
@@ -33,130 +58,24 @@ export interface RegionEconomy {
   readonly surplus: number;
 }
 
-export function computeRegionEconomy(
-  region: RegionState,
-  config: EngineConfig = defaultConfig,
-): RegionEconomy {
-  let production = 0;
+export function computeRegionEconomy(region: RegionState): RegionEconomy {
   let consumption = 0;
   for (const pop of region.pops) {
-    const size = exactSize(pop);
-    production +=
-      size * config.productionRate * Math.min(1, pop.actualStandardOfLiving);
-    consumption += size;
+    consumption += exactSize(pop);
   }
-  production = Math.min(production, region.productionCap);
+  const { production } = region;
   return { production, consumption, surplus: production - consumption };
 }
 
-interface RegionTick {
-  readonly region: RegionState;
-  readonly economy: RegionEconomy;
-}
-
-type RegionPhase = (tick: RegionTick, config: EngineConfig) => RegionTick;
-
-const regionPhases: readonly RegionPhase[] = [
-  produce,
-  birthsAndDeaths,
-  distribute,
-  adjustExpectations,
-  splitAndRemove,
-];
-
-function nextRegionState(
-  region: RegionState,
-  config: EngineConfig,
-): RegionState {
-  let tick: RegionTick = {
-    region,
-    economy: { production: 0, consumption: 0, surplus: 0 },
-  };
-  for (const phase of regionPhases) {
-    tick = phase(tick, config);
-  }
-  return tick.region;
-}
-
-function withPops(tick: RegionTick, pops: readonly Pop[]): RegionTick {
-  return { ...tick, region: { ...tick.region, pops } };
-}
-
-function produce(tick: RegionTick, config: EngineConfig): RegionTick {
-  return { ...tick, economy: computeRegionEconomy(tick.region, config) };
-}
-
-function birthsAndDeaths(tick: RegionTick, config: EngineConfig): RegionTick {
-  return withPops(
-    tick,
-    tick.region.pops.map((pop) => {
-      const size = exactSize(pop);
-      const previous = pop.actualStandardOfLiving;
-      const births = birthRate(previous, config) * size;
-      const deaths = deathRate(previous, config) * size;
-      return withExactSize(pop, size + births - deaths);
-    }),
-  );
-}
-
-function distribute(tick: RegionTick): RegionTick {
-  const { production, consumption } = tick.economy;
-  const actualStandardOfLiving = consumption > 0 ? production / consumption : 0;
-  return withPops(
-    tick,
-    tick.region.pops.map((pop) => ({ ...pop, actualStandardOfLiving })),
-  );
-}
-
-function adjustExpectations(
-  tick: RegionTick,
-  config: EngineConfig,
-): RegionTick {
-  return withPops(
-    tick,
-    tick.region.pops.map((pop) => ({
-      ...pop,
-      expectedStandardOfLiving: nextExpectedStandardOfLiving(
-        pop.expectedStandardOfLiving,
-        pop.actualStandardOfLiving,
-        config,
-      ),
-    })),
-  );
-}
-
-function splitAndRemove(tick: RegionTick, config: EngineConfig): RegionTick {
-  return withPops(tick, splitAndRemovePops(tick.region.pops, config));
-}
-
-// Applies after all of a region's changes for a tick. To move into a separate
-// after-tick handler (#28).
-function splitAndRemovePops(pops: readonly Pop[], config: EngineConfig): Pop[] {
-  return pops.flatMap((pop) => splitOrRemove(pop, config));
-}
-
-function splitOrRemove(pop: Pop, config: EngineConfig): Pop[] {
-  const size = exactSize(pop);
-  if (size < 1) {
-    return [];
-  }
-  if (size > config.maxPopSize) {
-    const half = size / 2;
-    return [
-      withExactSize({ ...pop, id: `${pop.id}.1` }, half),
-      withExactSize({ ...pop, id: `${pop.id}.2` }, half),
-    ];
-  }
-  return [pop];
-}
-
 export class Region implements Stateful<RegionState>, Tickable {
-  private _state: RegionState;
+  private _state: Omit<RegionState, "pops">;
+  private _pops: readonly Pop[] = [];
   private readonly config: EngineConfig;
 
   constructor(state: RegionState, config: EngineConfig = defaultConfig) {
-    this._state = state;
     this.config = config;
+    this._state = state;
+    this.setState(state);
   }
 
   get id(): string {
@@ -171,21 +90,82 @@ export class Region implements Stateful<RegionState>, Tickable {
     return this._state.productionCap;
   }
 
+  get production(): number {
+    return this._state.production;
+  }
+
   get pops(): readonly Pop[] {
-    return this._state.pops;
+    return this._pops;
   }
 
   getState(): RegionState {
-    return this._state;
+    return { ...this._state, pops: this._pops.map((pop) => pop.getState()) };
   }
 
   setState(state: RegionState): void {
-    this._state = state;
+    const { pops, ...own } = state;
+    this._state = own;
+    this._pops = pops.map((pop) => new Pop(pop, this.config));
   }
 
   tick(n = 1): void {
     for (let i = 0; i < n; i++) {
-      this._state = nextRegionState(this._state, this.config);
+      this.distribute();
+      this.tickPops();
+      this.splitAndRemove();
+      this.produce();
     }
+  }
+
+  private distribute(): void {
+    const total = this._pops.reduce(
+      (sum, pop) => sum + exactSize(pop.getState()),
+      0,
+    );
+    for (const pop of this._pops) {
+      const share =
+        total > 0
+          ? (this._state.production * exactSize(pop.getState())) / total
+          : 0;
+      pop.receive(share);
+    }
+  }
+
+  private tickPops(): void {
+    for (const pop of this._pops) {
+      pop.tick();
+    }
+  }
+
+  private splitAndRemove(): void {
+    this._pops = this._pops.flatMap((pop) => {
+      const state = pop.getState();
+      const size = exactSize(state);
+      if (size < 1) {
+        return [];
+      }
+      if (size > this.config.maxPopSize) {
+        const half = size / 2;
+        return [1, 2].map(
+          (part) =>
+            new Pop(
+              withExactSize({ ...state, id: `${state.id}.${part}` }, half),
+              this.config,
+            ),
+        );
+      }
+      return [pop];
+    });
+  }
+
+  private produce(): void {
+    this._state = {
+      ...this._state,
+      production: computeProduction(
+        this._pops.map((pop) => pop.getState()),
+        this._state.productionCap,
+        this.config,
+      ),
+    };
   }
 }
