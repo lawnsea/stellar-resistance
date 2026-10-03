@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
+  Cell,
   computeRegionEconomy,
+  createCell,
   createPop,
   createRegion,
   defaultConfig,
@@ -8,6 +10,7 @@ import {
   type PopState,
   Region,
   type RegionState,
+  regionPops,
 } from "./index";
 import { exactSize, withExactSize } from "./pop";
 
@@ -68,11 +71,26 @@ describe("createRegion", () => {
     pops: [onePop],
   };
 
-  test("creates a region with its pops", () => {
+  test("puts its pops in a new regional cell", () => {
+    const { pops, ...own } = fields;
     expect(createRegion(fields)).toEqual({
-      ...fields,
+      ...own,
       production: 100 * defaultConfig.productionRate,
+      regionalCell: { id: "r1-cell", faction: "", region: "r1", pops },
+      cells: [],
     });
+  });
+
+  test("keeps other factions' cells and counts their pops' production", () => {
+    const resistance = createCell({
+      id: "res-1",
+      faction: "res",
+      region: "r1",
+      pops: [pop("b", 300, 1)],
+    });
+    const r = createRegion({ ...fields, cells: [resistance] });
+    expect(r.cells).toEqual([resistance]);
+    expect(r.production).toBeCloseTo(400 * defaultConfig.productionRate);
   });
 
   test("computes production from its pops when not given", () => {
@@ -111,7 +129,7 @@ describe("createRegion", () => {
     const pops = [onePop];
     const region = createRegion({ ...fields, pops });
     pops.push(createPop({ id: "p2", size: 200, expectedStandardOfLiving: 1 }));
-    expect(region.pops).toHaveLength(1);
+    expect(regionPops(region)).toHaveLength(1);
   });
 
   test.each([0.5, 1000])("accepts production cap %s", (productionCap) => {
@@ -130,7 +148,60 @@ describe("createRegion", () => {
   );
 
   test("allows an unpopulated region", () => {
-    expect(createRegion({ ...fields, pops: [] }).pops).toEqual([]);
+    expect(regionPops(createRegion({ ...fields, pops: [] }))).toEqual([]);
+  });
+});
+
+describe("Region cells", () => {
+  const resistance = createCell({
+    id: "res-1",
+    faction: "res",
+    region: "r1",
+    pops: [pop("b", 300)],
+  });
+
+  test("holds its regional cell and other cells, with the region as their region", () => {
+    const r = new Region(
+      createRegion({
+        id: "r1",
+        type: "urban",
+        productionCap: 1e9,
+        pops: [pop("a", 100)],
+        cells: [resistance],
+      }),
+    );
+    expect(r.regionalCell).toBeInstanceOf(Cell);
+    expect(r.regionalCell.region).toBe(r);
+    expect(r.cells[0]?.region).toBe(r);
+    expect(r.pops.map((p) => p.id)).toEqual(["a", "b"]);
+    expect(r.pops[1]?.cell).toBe(r.cells[0]);
+  });
+
+  test("a cell naming a different region is an error", () => {
+    const elsewhere = { ...resistance, region: "r2" };
+    const data = createRegion({ id: "r1", type: "urban", productionCap: 1e9 });
+    expect(() => new Region({ ...data, cells: [elsewhere] })).toThrow(
+      "Cell res-1 is in region r1 but names region r2",
+    );
+  });
+
+  test("a split pop's halves stay in its cell", () => {
+    const steady = { ...defaultConfig, baseBirthRate: 0, baseDeathRate: 0 };
+    const big = createCell({
+      ...resistance,
+      pops: [withExactSize(pop("big", 100), 5000.7)],
+    });
+    const r = new Region(
+      createRegion(
+        { id: "r1", type: "urban", productionCap: 1e9, cells: [big] },
+        steady,
+      ),
+      steady,
+    );
+    r.tick();
+    expect(r.cells[0]?.pops.map((p) => p.id)).toEqual(["big.1", "big.2"]);
+    expect(r.cells[0]?.pops.every((p) => p.cell === r.cells[0])).toBe(true);
+    expect(r.regionalCell.pops).toEqual([]);
   });
 });
 
@@ -161,7 +232,9 @@ describe("computeRegionEconomy", () => {
 });
 
 test("a pop that starves for several ticks comes to expect starvation", () => {
-  const starving = tickRegion(region([pop("a", 1000, 0, 1.2)]), 20).pops[0];
+  const starving = regionPops(
+    tickRegion(region([pop("a", 1000, 0, 1.2)]), 20),
+  )[0];
   expect(starving?.actualStandardOfLiving).toBe(0);
   expect(starving?.expectedStandardOfLiving).toBeLessThan(0.01);
 });
@@ -169,16 +242,16 @@ test("a pop that starves for several ticks comes to expect starvation", () => {
 describe("Region.tick", () => {
   test("distributes last tick's production among pops by size", () => {
     // 3500 units for 4000 people.
-    const [a, b] = tickRegion(
-      region([pop("a", 1000), pop("b", 3000)], 1e9, 3500),
-    ).pops;
+    const [a, b] = regionPops(
+      tickRegion(region([pop("a", 1000), pop("b", 3000)], 1e9, 3500)),
+    );
     expect(a?.actualStandardOfLiving).toBeCloseTo(3500 / 4000);
     expect(b?.actualStandardOfLiving).toBeCloseTo(3500 / 4000);
   });
 
   test("a pop of 500 whose share is 500 units has an actual standard of living of 1.0", () => {
     expect(
-      tickRegion(region([pop("a", 500)], 1e9, 500)).pops[0]
+      regionPops(tickRegion(region([pop("a", 500)], 1e9, 500)))[0]
         ?.actualStandardOfLiving,
     ).toBe(1);
   });
@@ -186,12 +259,12 @@ describe("Region.tick", () => {
   test("updates expected standard of living toward the new actual", () => {
     // Actual becomes 1.5; expected moves halfway from 2 toward 1.5.
     const next = tickRegion(region([pop("a", 1000, 1, 2)], 1e9, 1500));
-    expect(next.pops[0]?.expectedStandardOfLiving).toBeCloseTo(1.75);
+    expect(regionPops(next)[0]?.expectedStandardOfLiving).toBeCloseTo(1.75);
   });
 
   test("produces size × rate × min(1, new actual standard of living) for the next tick", () => {
     const next = tickRegion(region([pop("a", 1000, 1)], 1e9, 500));
-    const [ticked] = next.pops;
+    const [ticked] = regionPops(next);
     expect(ticked?.actualStandardOfLiving).toBeCloseTo(0.5);
     expect(next.production).toBeCloseTo(
       (ticked ? exactSize(ticked) : 0) * config.productionRate * 0.5,
@@ -206,7 +279,7 @@ describe("Region.tick", () => {
 
   test("a capped region's pops get the capped share", () => {
     const next = tickRegion(region([pop("a", 1000, 1)], 800));
-    expect(next.pops[0]?.actualStandardOfLiving).toBeCloseTo(0.8);
+    expect(regionPops(next)[0]?.actualStandardOfLiving).toBeCloseTo(0.8);
   });
 
   test("tick replaces its state without mutating the previous state", () => {
@@ -248,7 +321,7 @@ describe("Region.tick splits and removes pops", () => {
       steady,
     );
     ticked.tick();
-    return ticked.getState().pops;
+    return regionPops(ticked.getState());
   }
 
   test("splits a pop over the maximum into two new pops of half its size", () => {

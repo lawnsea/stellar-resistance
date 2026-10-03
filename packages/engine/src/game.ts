@@ -1,7 +1,6 @@
 import { defaultConfig, type EngineConfig } from "./config";
 import { Faction, type FactionState } from "./faction";
 import { Planet, type PlanetState } from "./planet";
-import { withPlanetaryFactions } from "./planetary-factions";
 import type { Stateful, Tickable } from "./traits";
 
 export interface GameState {
@@ -35,11 +34,27 @@ export class Game implements Stateful<GameState>, Tickable {
   }
 
   setState(state: GameState): void {
-    const filled = withPlanetaryFactions(state);
-    this._factions = filled.factions.map((faction) => new Faction(faction));
-    this._planets = filled.planets.map(
+    this._factions = state.factions.map((faction) => new Faction(faction));
+    this._planets = state.planets.map(
       (planet) => new Planet(planet, this.config),
     );
+    const byId = new Map(
+      this._factions.map((faction) => [faction.id, faction]),
+    );
+    for (const planet of this._planets) {
+      for (const region of planet.regions) {
+        for (const cell of region.cells) {
+          if (cell.factionId === planet.planetaryFaction.id) continue;
+          const faction = byId.get(cell.factionId);
+          if (!faction) {
+            throw new Error(
+              `Cell ${cell.id} names faction ${cell.factionId}, which isn't in the game`,
+            );
+          }
+          faction.addCell(cell);
+        }
+      }
+    }
   }
 
   tick(n = 1): void {
@@ -47,8 +62,6 @@ export class Game implements Stateful<GameState>, Tickable {
       for (const planet of this._planets) {
         planet.tick();
       }
-      const { factions } = withPlanetaryFactions(this.getState());
-      this._factions = factions.map((faction) => new Faction(faction));
     }
   }
 }

@@ -29,12 +29,12 @@ The game's plain data.
 
 | Field | Type | Description |
 |---|---|---|
-| `factions` | `readonly FactionState[]` | The [factions](../../design/entities/faction.md) |
+| `factions` | `readonly FactionState[]` | The [factions](../../design/entities/faction.md) other than the planets' planetary factions, which their planets own |
 | `planets` | `readonly PlanetState[]` | The [planets](../../design/entities/planet.md) |
 
 ### `class Game`
 
-Implements `Stateful<GameState>` and `Tickable`. Constructed with `new Game(state, config?)`; `config` defaults to [`defaultConfig`](engine-config.md). When created, and after each tick, the game fills in [planetary factions](../../design/entities/faction.md): a planet without a `factionId` gets a planetary faction named after it, each planetary faction gets a cell in every region of its planet that lacks one, and cell membership is updated so that the halves of a split pop take its place in its cell, pops that died out leave their cell, and pops without a cell join their region's planetary cell. A planet whose `factionId` names a missing faction is an error. Getters: `factions` and `planets`, which return [`Faction`](../../design/entities/faction.md) and [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` advances the game n ticks, ticking each planet once per tick and then updating cell membership.
+Implements `Stateful<GameState>` and `Tickable`. Constructed with `new Game(state, config?)`; `config` defaults to [`defaultConfig`](engine-config.md). When created, the game links each of its factions to the [cells](../../design/entities/cell.md) that name it; a cell naming a faction that isn't in the game, or its planet's planetary faction, is an error. Each [planet](../../design/entities/planet.md) links its own planetary faction to its regional cells. Getters: `factions` and `planets`, which return [`Faction`](../../design/entities/faction.md) and [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` advances the game n ticks, ticking each planet once per tick.
 
 ### `createTestGame(): Game`
 

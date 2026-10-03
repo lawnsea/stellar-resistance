@@ -9,10 +9,24 @@ describe("createPlanet", () => {
     pops: [],
   });
 
-  test("creates a planet with its regions", () => {
+  test("creates a planet with its regions and a planetary faction for their regional cells", () => {
     expect(
       createPlanet({ id: "p1", name: "Ferrix", regions: [rural] }),
-    ).toEqual({ id: "p1", name: "Ferrix", regions: [rural] });
+    ).toEqual({
+      id: "p1",
+      name: "Ferrix",
+      planetaryFaction: {
+        id: "p1-faction",
+        name: "Ferrix",
+        cellIds: ["r1-cell"],
+      },
+      regions: [
+        {
+          ...rural,
+          regionalCell: { ...rural.regionalCell, faction: "p1-faction" },
+        },
+      ],
+    });
   });
 
   test("copies the regions array", () => {
