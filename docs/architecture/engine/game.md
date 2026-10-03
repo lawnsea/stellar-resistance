@@ -29,12 +29,12 @@ The game's plain data.
 
 | Field | Type | Description |
 |---|---|---|
-| `factions` | `readonly FactionState[]` | The [factions](../../design/entities/faction.md) |
+| `factions` | `readonly FactionState[]` | The [factions](../../design/entities/faction.md) other than the planets' planetary factions, which their planets own |
 | `planets` | `readonly PlanetState[]` | The [planets](../../design/entities/planet.md) |
 
 ### `class Game`
 
-Implements `Stateful<GameState>` and `Tickable`. Constructed with `new Game(state, config?)`; `config` defaults to [`defaultConfig`](engine-config.md). Getters: `factions` and `planets`, which return [`Faction`](../../design/entities/faction.md) and [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` advances the game n ticks, keeping its factions and ticking each planet once per tick.
+Implements `Stateful<GameState>` and `Tickable`. Constructed with `new Game(state, config?)`; `config` defaults to [`defaultConfig`](engine-config.md). When created, the game links each of its factions to the [cells](../../design/entities/cell.md) that name it; a cell naming a faction that isn't in the game, or its planet's planetary faction, is an error. Each [planet](../../design/entities/planet.md) links its own planetary faction to its regional cells. Getters: `factions` and `planets`, which return [`Faction`](../../design/entities/faction.md) and [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` advances the game n ticks, ticking each planet once per tick.
 
 ### `createTestGame(): Game`
 

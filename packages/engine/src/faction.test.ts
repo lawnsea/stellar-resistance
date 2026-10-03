@@ -1,63 +1,46 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import { Cell, createCell, createFaction, Faction } from "./index";
 
-const cell = createCell({ id: "c1", regionId: "r1" });
-const faction = createFaction({
-  id: "f1",
-  name: "The Resistance",
-  cells: [cell],
-});
-
 describe("createFaction", () => {
-  test("creates a faction with its cells", () => {
-    expect(faction).toEqual({
-      id: "f1",
+  test("creates a faction with its cell ids", () => {
+    expect(
+      createFaction({ id: "res", name: "The Resistance", cellIds: ["c1"] }),
+    ).toEqual({ id: "res", name: "The Resistance", cellIds: ["c1"] });
+  });
+
+  test("cell ids default to none", () => {
+    expect(createFaction({ id: "emp", name: "The Empire" }).cellIds).toEqual(
+      [],
+    );
+  });
+
+  test("copies the cell ids", () => {
+    const cellIds = ["c1"];
+    const faction = createFaction({
+      id: "res",
       name: "The Resistance",
-      cells: [cell],
+      cellIds,
     });
-  });
-
-  test("cells default to none", () => {
-    expect(createFaction({ id: "f2", name: "The Empire" }).cells).toEqual([]);
-  });
-
-  test("copies the cells array", () => {
-    const cells = [cell];
-    const f = createFaction({ id: "f1", name: "The Resistance", cells });
-    cells.push(createCell({ id: "c2", regionId: "r2" }));
-    expect(f.cells).toHaveLength(1);
+    cellIds.push("c2");
+    expect(faction.cellIds).toEqual(["c1"]);
   });
 });
 
 describe("Faction", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  test("exposes its id, name, and cells", () => {
-    const f = new Faction(faction);
-    expect(f.id).toBe("f1");
+  test("exposes its id and name", () => {
+    const f = new Faction(createFaction({ id: "res", name: "The Resistance" }));
+    expect(f.id).toBe("res");
     expect(f.name).toBe("The Resistance");
-    expect(f.cells[0]).toBeInstanceOf(Cell);
-    expect(f.cells.map((c) => c.getState())).toEqual([cell]);
   });
 
-  test("getState builds its data from its cells' getState", () => {
-    const cellGetState = vi.spyOn(Cell.prototype, "getState");
-    expect(new Faction(faction).getState()).toEqual(faction);
-    expect(cellGetState).toHaveBeenCalledTimes(1);
-  });
-
-  test("setState replaces its data and rebuilds its cells", () => {
-    const f = new Faction(faction);
-    const other = createFaction({
-      id: "f1",
-      name: "Rebel Alliance",
-      cells: [createCell({ id: "c9", regionId: "r9" })],
-    });
-    f.setState(other);
-    expect(f.name).toBe("Rebel Alliance");
-    expect(f.cells.map((c) => c.id)).toEqual(["c9"]);
-    expect(f.getState()).toEqual(other);
+  test("addCell links the cell both ways and lists it in the faction's state", () => {
+    const f = new Faction(createFaction({ id: "res", name: "The Resistance" }));
+    const cell = new Cell(
+      createCell({ id: "c1", faction: "res", region: "r1" }),
+    );
+    f.addCell(cell);
+    expect(f.cells).toEqual([cell]);
+    expect(cell.faction).toBe(f);
+    expect(f.getState().cellIds).toEqual(["c1"]);
   });
 });

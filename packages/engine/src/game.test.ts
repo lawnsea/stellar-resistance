@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
+  Cell,
+  createCell,
   createFaction,
   createPlanet,
   createPop,
@@ -9,23 +11,31 @@ import {
   Planet,
   Pop,
   Region,
+  regionPops,
 } from "./index";
 
 const faction = createFaction({ id: "f1", name: "The Resistance" });
-const region = createRegion({
-  id: "r1",
-  type: "rural",
-  productionCap: 1e9,
-  pops: [
-    createPop({
-      id: "p1",
-      size: 1000,
-      actualStandardOfLiving: 0.5,
-      expectedStandardOfLiving: 1,
+const planet = createPlanet({
+  id: "pl",
+  name: "Ferrix",
+  regions: [
+    createRegion({
+      id: "r1",
+      type: "rural",
+      productionCap: 1e9,
+      pops: [
+        createPop({
+          id: "p1",
+          size: 1000,
+          actualStandardOfLiving: 0.5,
+          expectedStandardOfLiving: 1,
+        }),
+      ],
     }),
   ],
 });
-const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [region] });
+const [region] = planet.regions;
+if (!region) throw new Error("region missing");
 const data = { factions: [faction], planets: [planet] };
 
 describe("Game", () => {
@@ -35,6 +45,45 @@ describe("Game", () => {
     expect(game.planets.map((p) => p.getState())).toEqual([planet]);
     expect(game.factions[0]).toBeInstanceOf(Faction);
     expect(game.planets[0]).toBeInstanceOf(Planet);
+  });
+
+  test("links each faction to its cells", () => {
+    const withCell = createPlanet({
+      id: "pl",
+      name: "Ferrix",
+      regions: [
+        createRegion({
+          id: "r1",
+          type: "rural",
+          productionCap: 1e9,
+          cells: [createCell({ id: "res-1", faction: "f1", region: "r1" })],
+        }),
+      ],
+    });
+    const game = new Game({ factions: [faction], planets: [withCell] });
+    const cell = game.planets[0]?.regions[0]?.cells[0];
+    expect(cell).toBeInstanceOf(Cell);
+    expect(game.factions[0]?.cells).toEqual([cell]);
+    expect(cell?.faction).toBe(game.factions[0]);
+    expect(game.getState().factions[0]?.cellIds).toEqual(["res-1"]);
+  });
+
+  test("a cell naming a faction that isn't in the game is an error", () => {
+    const orphan = createPlanet({
+      id: "pl",
+      name: "Ferrix",
+      regions: [
+        createRegion({
+          id: "r1",
+          type: "rural",
+          productionCap: 1e9,
+          cells: [createCell({ id: "x-1", faction: "x", region: "r1" })],
+        }),
+      ],
+    });
+    expect(() => new Game({ factions: [], planets: [orphan] })).toThrow(
+      "Cell x-1 names faction x, which isn't in the game",
+    );
   });
 
   test("copies the factions and planets arrays", () => {
@@ -59,7 +108,8 @@ describe("Game", () => {
   test("getState builds its data from its factions' getState", () => {
     const factionGetState = vi.spyOn(Faction.prototype, "getState");
     expect(new Game(data).getState().factions).toEqual([faction]);
-    expect(factionGetState).toHaveBeenCalledTimes(1);
+    // Once for the game's faction and once for the planet's planetary faction.
+    expect(factionGetState).toHaveBeenCalledTimes(2);
     vi.restoreAllMocks();
   });
 
@@ -106,7 +156,7 @@ describe("tick(n) ticks each descendant once per tick", () => {
 
   test("Game ticks each planet n times, one tick at a time", () => {
     const planetTick = vi.spyOn(Planet.prototype, "tick");
-    new Game({ factions: [], planets: [planet, planet] }).tick(3);
+    new Game({ factions: [faction], planets: [planet, planet] }).tick(3);
     expect(planetTick).toHaveBeenCalledTimes(6);
     for (const call of planetTick.mock.calls) {
       expect(call[0] ?? 1).toBe(1);
@@ -124,6 +174,22 @@ describe("tick(n) ticks each descendant once per tick", () => {
 });
 
 describe("Planet", () => {
+  test("createPlanet gives the planet a planetary faction with its regional cells", () => {
+    expect(planet.planetaryFaction).toEqual({
+      id: "pl-faction",
+      name: "Ferrix",
+      cellIds: ["r1-cell"],
+    });
+    expect(region.regionalCell.faction).toBe("pl-faction");
+  });
+
+  test("its planetary faction is linked to each region's regional cell", () => {
+    const p = new Planet(planet);
+    expect(p.planetaryFaction).toBeInstanceOf(Faction);
+    expect(p.planetaryFaction.cells).toEqual([p.regions[0]?.regionalCell]);
+    expect(p.regions[0]?.regionalCell.faction).toBe(p.planetaryFaction);
+  });
+
   test("exposes its id, name, and regions", () => {
     const p = new Planet(planet);
     expect(p.id).toBe("pl");
@@ -137,7 +203,9 @@ describe("Planet", () => {
     const p = new Planet(
       createPlanet({ ...planet, regions: [region, region] }),
     );
-    expect(p.getState()).toEqual({ ...planet, regions: [region, region] });
+    expect(p.getState()).toEqual(
+      createPlanet({ ...planet, regions: [region, region] }),
+    );
     expect(regionGetState).toHaveBeenCalledTimes(2);
     vi.restoreAllMocks();
   });
@@ -190,13 +258,13 @@ describe("Region", () => {
     expect(r.productionCap).toBe(1e9);
     expect(r.production).toBe(region.production);
     expect(r.pops[0]).toBeInstanceOf(Pop);
-    expect(r.pops.map((pop) => pop.getState())).toEqual(region.pops);
+    expect(r.pops.map((pop) => pop.getState())).toEqual(regionPops(region));
   });
 
   test("getState builds its data from its pops' getState", () => {
     const popGetState = vi.spyOn(Pop.prototype, "getState");
     expect(new Region(region).getState()).toEqual(region);
-    expect(popGetState).toHaveBeenCalledTimes(region.pops.length);
+    expect(popGetState).toHaveBeenCalledTimes(regionPops(region).length);
     vi.restoreAllMocks();
   });
 

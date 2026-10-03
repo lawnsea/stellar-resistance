@@ -14,15 +14,16 @@ A planet's plain data.
 |---|---|---|
 | `id` | `string` | Unique identifier |
 | `name` | `string` | Display name |
+| `planetaryFaction` | `FactionState` | The planet's [planetary faction](faction.md) |
 | `regions` | `readonly RegionState[]` | The planet's [regions](region.md); always at least one |
 
-### `createPlanet(fields: PlanetState): PlanetState`
+### `createPlanet(fields: PlanetFields): PlanetState`
 
-Creates a planet's data with a copy of the given regions. Throws if `regions` is empty.
+Creates a planet's data with a copy of the given regions. `PlanetFields` is `PlanetState` without `planetaryFaction`: every planet gets one, so it's created here, named after the planet (id `<planet>-faction`), and set as the faction of each region's regional cell. Throws if `regions` is empty.
 
 ### `class Planet`
 
-Implements [`Stateful<PlanetState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Planet(state, config?)`. Getters: `id`, `name`, and `regions`, which returns [`Region`](region.md) instances. `tick(n = 1)` advances the planet n ticks, ticking each region once per tick.
+Implements [`Stateful<PlanetState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Planet(state, config?)`. Getters: `id`, `name`, `planetaryFaction` (a [`Faction`](faction.md) linked to its regions' regional cells), and `regions`, which returns [`Region`](region.md) instances. `tick(n = 1)` advances the planet n ticks, ticking each region once per tick.
 
 ### `testPlanets: readonly PlanetState[]`
 

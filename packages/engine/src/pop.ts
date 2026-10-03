@@ -1,3 +1,4 @@
+import type { Cell } from "./cell";
 import { defaultConfig, type EngineConfig } from "./config";
 import type { Stateful, Tickable } from "./traits";
 
@@ -115,10 +116,20 @@ export class Pop implements Stateful<PopState>, Tickable {
   private _state: PopState;
   private share = 0;
   private readonly config: EngineConfig;
+  private readonly _cell: Cell | undefined;
 
-  constructor(state: PopState, config: EngineConfig = defaultConfig) {
+  constructor(
+    state: PopState,
+    config: EngineConfig = defaultConfig,
+    cell?: Cell,
+  ) {
     this._state = state;
     this.config = config;
+    this._cell = cell;
+  }
+
+  get cell(): Cell | undefined {
+    return this._cell;
   }
 
   get id(): string {

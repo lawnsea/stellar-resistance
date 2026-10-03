@@ -1,6 +1,6 @@
 # Region
 
-Regions are part of a planet and contain zero or more pops; a region with no pops is unpopulated. Regions don't have a name. Each has a type, which is rural or urban for now.
+Regions are part of a planet and contain zero or more pops, held in the region's [cells](cell.md); a region with no pops is unpopulated. Regions don't have a name. Each has a type, which is rural or urban for now.
 
 A region's pops produce resources in units of production, where one unit meets one person's consumption requirement for a tick. Each tick, the region divides the production from its previous tick among its pops by size, and the pops live on that share. At the end of the tick, the pops produce for the next one: each produces its size × the production rate × its new actual standard of living, capped at 1.0, so underfed pops produce less. A region never produces more than its production cap, which represents its carrying capacity, however many pops work it.
 
@@ -18,7 +18,8 @@ A region's plain data.
 | `type` | `RegionType` | The kind of region |
 | `productionCap` | `number` | Carrying capacity: the most units of production the region produces per tick; positive |
 | `production` | `number` | Units produced last tick, to be divided among the pops next tick; at least 0.0 |
-| `pops` | `readonly PopState[]` | The region's [pops](pop.md); empty if unpopulated |
+| `regionalCell` | `CellState` | The region's [regional cell](cell.md), which belongs to its planet's planetary faction and holds every pop not in another cell |
+| `cells` | `readonly CellState[]` | The region's other [cells](cell.md), such as resistance cells |
 
 ### `RegionType`
 
@@ -26,11 +27,11 @@ A region's plain data.
 
 ### `createRegion(fields: RegionFields, config?: EngineConfig): RegionState`
 
-Creates a region's data with a copy of the given pops. `RegionFields` is `RegionState` with `production` optional; when it's omitted, the region's production is computed from its pops as if it had already ticked: min(`productionCap`, Σ (pop size × [`productionRate`](../../architecture/engine/engine-config.md) × min(1, `actualStandardOfLiving`))). Throws if `productionCap` isn't a positive, finite number, or if `production` is below 0.0. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
+Creates a region's data. `RegionFields` takes `id`, `type`, `productionCap`, and optionally `production`, `pops`, and `cells`: the given pops go into a new regional cell (id `<region>-cell`), and the given cells are kept. When `production` is omitted, it's computed from all the region's pops as if the region had already ticked: min(`productionCap`, Σ (pop size × [`productionRate`](../../architecture/engine/engine-config.md) × min(1, `actualStandardOfLiving`))). Throws if `productionCap` isn't a positive, finite number, or if `production` is below 0.0. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
 
 ### `class Region`
 
-Implements [`Stateful<RegionState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, `production`, and `pops`, which returns [`Pop`](pop.md) instances. `tick(n = 1)` advances the region n ticks, running the [tick phases](../../architecture/engine/tick.md) in order each tick.
+Implements [`Stateful<RegionState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, `production`, `regionalCell` and `cells` (its [`Cell`](cell.md) instances, each referring back to the region), and `pops`, all its cells' [`Pop`](pop.md) instances. A cell whose `region` doesn't name the region holding it is an error. `tick(n = 1)` advances the region n ticks, running the [tick phases](../../architecture/engine/tick.md) in order each tick.
 
 ## Economy API
 
@@ -47,3 +48,7 @@ Amounts are in units of production.
 ### `computeRegionEconomy(region: RegionState): RegionEconomy`
 
 Computes a region's economy on demand: last tick's production against what its pops need this tick.
+
+### `regionPops(region: RegionState): PopState[]`
+
+All the pops in a region's data, across its regional cell and other cells.

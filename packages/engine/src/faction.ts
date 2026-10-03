@@ -1,27 +1,30 @@
-import { Cell, type CellState } from "./cell";
+import type { Cell } from "./cell";
 import type { Stateful } from "./traits";
 
 export interface FactionState {
   readonly id: string;
   readonly name: string;
-  readonly cells: readonly CellState[];
+  readonly cellIds: readonly string[];
 }
 
-export interface FactionFields extends Omit<FactionState, "cells"> {
-  readonly cells?: readonly CellState[];
+export interface FactionFields extends Omit<FactionState, "cellIds"> {
+  readonly cellIds?: readonly string[];
 }
 
 export function createFaction(fields: FactionFields): FactionState {
-  return { id: fields.id, name: fields.name, cells: [...(fields.cells ?? [])] };
+  return {
+    id: fields.id,
+    name: fields.name,
+    cellIds: [...(fields.cellIds ?? [])],
+  };
 }
 
 export class Faction implements Stateful<FactionState> {
-  private _state: Omit<FactionState, "cells">;
+  private _state: FactionState;
   private _cells: readonly Cell[] = [];
 
   constructor(state: FactionState) {
     this._state = state;
-    this.setState(state);
   }
 
   get id(): string {
@@ -36,16 +39,16 @@ export class Faction implements Stateful<FactionState> {
     return this._cells;
   }
 
+  addCell(cell: Cell): void {
+    this._cells = [...this._cells, cell];
+    cell.joinFaction(this);
+  }
+
   getState(): FactionState {
-    return {
-      ...this._state,
-      cells: this._cells.map((cell) => cell.getState()),
-    };
+    return { ...this._state, cellIds: this._cells.map((cell) => cell.id) };
   }
 
   setState(state: FactionState): void {
-    const { cells, ...own } = state;
-    this._state = own;
-    this._cells = cells.map((cell) => new Cell(cell));
+    this._state = state;
   }
 }

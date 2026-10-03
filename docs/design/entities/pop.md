@@ -25,7 +25,7 @@ Creates a pop's data. `PopFields` is `PopState` with `actualStandardOfLiving` op
 
 ### `class Pop`
 
-Implements [`Stateful<PopState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Pop(state, config?)`. Getters: `id`, `size`, `actualStandardOfLiving`, and `expectedStandardOfLiving`. `receive(share)` gives the pop its share of the region's production, in units. `tick(n = 1)` advances the pop n ticks: each tick sets its actual standard of living to share ÷ size, applies births and deaths at the rates for that standard of living, and moves its expected standard of living toward it. Its [region](region.md) gives each pop its share before ticking it; a pop ticked more than once uses the same share each tick.
+Implements [`Stateful<PopState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Pop(state, config?, cell?)`. Getters: `id`, `size`, `actualStandardOfLiving`, `expectedStandardOfLiving`, and `cell`, the [`Cell`](cell.md) the pop belongs to. `receive(share)` gives the pop its share of the region's production, in units. `tick(n = 1)` advances the pop n ticks: each tick sets its actual standard of living to share ÷ size, applies births and deaths at the rates for that standard of living, and moves its expected standard of living toward it. Its [region](region.md) gives each pop its share before ticking it; a pop ticked more than once uses the same share each tick.
 
 ### `nextExpectedStandardOfLiving(expected: number, actual: number, config?: EngineConfig): number`
 

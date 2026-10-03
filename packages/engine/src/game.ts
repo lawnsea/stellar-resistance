@@ -38,6 +38,23 @@ export class Game implements Stateful<GameState>, Tickable {
     this._planets = state.planets.map(
       (planet) => new Planet(planet, this.config),
     );
+    const byId = new Map(
+      this._factions.map((faction) => [faction.id, faction]),
+    );
+    for (const planet of this._planets) {
+      for (const region of planet.regions) {
+        for (const cell of region.cells) {
+          if (cell.factionId === planet.planetaryFaction.id) continue;
+          const faction = byId.get(cell.factionId);
+          if (!faction) {
+            throw new Error(
+              `Cell ${cell.id} names faction ${cell.factionId}, which isn't in the game`,
+            );
+          }
+          faction.addCell(cell);
+        }
+      }
+    }
   }
 
   tick(n = 1): void {

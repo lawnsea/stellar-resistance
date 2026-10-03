@@ -1,5 +1,6 @@
+import { Cell, type CellState, createCell } from "./cell";
 import { defaultConfig, type EngineConfig } from "./config";
-import { exactSize, Pop, type PopState, withExactSize } from "./pop";
+import { exactSize, type Pop, type PopState } from "./pop";
 import type { Stateful, Tickable } from "./traits";
 
 export type RegionType = "rural" | "urban";
@@ -9,11 +10,17 @@ export interface RegionState {
   readonly type: RegionType;
   readonly productionCap: number;
   readonly production: number;
-  readonly pops: readonly PopState[];
+  readonly regionalCell: CellState;
+  readonly cells: readonly CellState[];
 }
 
-export interface RegionFields extends Omit<RegionState, "production"> {
+export interface RegionFields {
+  readonly id: string;
+  readonly type: RegionType;
+  readonly productionCap: number;
   readonly production?: number;
+  readonly pops?: readonly PopState[];
+  readonly cells?: readonly CellState[];
 }
 
 export function createRegion(
@@ -26,7 +33,14 @@ export function createRegion(
       `Region ${id} production cap must be a positive number, got ${productionCap}`,
     );
   }
-  const pops = [...fields.pops];
+  const regionalCell = createCell({
+    id: `${id}-cell`,
+    faction: "",
+    region: id,
+    pops: fields.pops ?? [],
+  });
+  const cells = [...(fields.cells ?? [])];
+  const pops = regionPops({ regionalCell, cells });
   const production =
     fields.production ?? computeProduction(pops, productionCap, config);
   if (!(production >= 0) || !Number.isFinite(production)) {
@@ -34,7 +48,7 @@ export function createRegion(
       `Region ${id} production must be at least 0, got ${production}`,
     );
   }
-  return { id, type, productionCap, production, pops };
+  return { id, type, productionCap, production, regionalCell, cells };
 }
 
 function computeProduction(
@@ -58,9 +72,15 @@ export interface RegionEconomy {
   readonly surplus: number;
 }
 
+export function regionPops(
+  region: Pick<RegionState, "regionalCell" | "cells">,
+): PopState[] {
+  return [region.regionalCell, ...region.cells].flatMap((cell) => cell.pops);
+}
+
 export function computeRegionEconomy(region: RegionState): RegionEconomy {
   let consumption = 0;
-  for (const pop of region.pops) {
+  for (const pop of regionPops(region)) {
     consumption += exactSize(pop);
   }
   const { production } = region;
@@ -68,8 +88,9 @@ export function computeRegionEconomy(region: RegionState): RegionEconomy {
 }
 
 export class Region implements Stateful<RegionState>, Tickable {
-  private _state: Omit<RegionState, "pops">;
-  private _pops: readonly Pop[] = [];
+  private _state: Omit<RegionState, "regionalCell" | "cells">;
+  private _regionalCell!: Cell;
+  private _cells: readonly Cell[] = [];
   private readonly config: EngineConfig;
 
   constructor(state: RegionState, config: EngineConfig = defaultConfig) {
@@ -94,18 +115,38 @@ export class Region implements Stateful<RegionState>, Tickable {
     return this._state.production;
   }
 
+  get regionalCell(): Cell {
+    return this._regionalCell;
+  }
+
+  get cells(): readonly Cell[] {
+    return this._cells;
+  }
+
   get pops(): readonly Pop[] {
-    return this._pops;
+    return [this._regionalCell, ...this._cells].flatMap((cell) => cell.pops);
   }
 
   getState(): RegionState {
-    return { ...this._state, pops: this._pops.map((pop) => pop.getState()) };
+    return {
+      ...this._state,
+      regionalCell: this._regionalCell.getState(),
+      cells: this._cells.map((cell) => cell.getState()),
+    };
   }
 
   setState(state: RegionState): void {
-    const { pops, ...own } = state;
+    const { regionalCell, cells, ...own } = state;
+    for (const cell of [regionalCell, ...cells]) {
+      if (cell.region !== own.id) {
+        throw new Error(
+          `Cell ${cell.id} is in region ${own.id} but names region ${cell.region}`,
+        );
+      }
+    }
     this._state = own;
-    this._pops = pops.map((pop) => new Pop(pop, this.config));
+    this._regionalCell = new Cell(regionalCell, this.config, this);
+    this._cells = cells.map((cell) => new Cell(cell, this.config, this));
   }
 
   tick(n = 1): void {
@@ -118,11 +159,9 @@ export class Region implements Stateful<RegionState>, Tickable {
   }
 
   private distribute(): void {
-    const total = this._pops.reduce(
-      (sum, pop) => sum + exactSize(pop.getState()),
-      0,
-    );
-    for (const pop of this._pops) {
+    const pops = this.pops;
+    const total = pops.reduce((sum, pop) => sum + exactSize(pop.getState()), 0);
+    for (const pop of pops) {
       const share =
         total > 0
           ? (this._state.production * exactSize(pop.getState())) / total
@@ -132,37 +171,22 @@ export class Region implements Stateful<RegionState>, Tickable {
   }
 
   private tickPops(): void {
-    for (const pop of this._pops) {
+    for (const pop of this.pops) {
       pop.tick();
     }
   }
 
   private splitAndRemove(): void {
-    this._pops = this._pops.flatMap((pop) => {
-      const state = pop.getState();
-      const size = exactSize(state);
-      if (size < 1) {
-        return [];
-      }
-      if (size > this.config.maxPopSize) {
-        const half = size / 2;
-        return [1, 2].map(
-          (part) =>
-            new Pop(
-              withExactSize({ ...state, id: `${state.id}.${part}` }, half),
-              this.config,
-            ),
-        );
-      }
-      return [pop];
-    });
+    for (const cell of [this._regionalCell, ...this._cells]) {
+      cell.splitAndRemovePops();
+    }
   }
 
   private produce(): void {
     this._state = {
       ...this._state,
       production: computeProduction(
-        this._pops.map((pop) => pop.getState()),
+        this.pops.map((pop) => pop.getState()),
         this._state.productionCap,
         this.config,
       ),
