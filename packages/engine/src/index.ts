@@ -8,6 +8,12 @@ export {
 } from "./faction";
 export { Game, type GameState } from "./game";
 export {
+  createInfrastructure,
+  Infrastructure,
+  type InfrastructureState,
+  type InfrastructureType,
+} from "./infrastructure";
+export {
   createPlanet,
   Planet,
   type PlanetFields,

@@ -3,10 +3,12 @@ import {
   Cell,
   computeRegionEconomy,
   createCell,
+  createInfrastructure,
   createPop,
   createRegion,
   defaultConfig,
   type EngineConfig,
+  Infrastructure,
   type PopState,
   Region,
   type RegionState,
@@ -78,6 +80,7 @@ describe("createRegion", () => {
       production: 100 * defaultConfig.productionRate,
       regionalCell: { id: "r1-cell", faction: "", region: "r1", pops },
       cells: [],
+      infrastructure: [],
     });
   });
 
@@ -387,5 +390,87 @@ describe("Region.tick splitting and removal", () => {
 
   test("removes a pop that shrinks below 1, leaving the region unpopulated", () => {
     expect(tickPops(1, 0)).toEqual([]);
+  });
+});
+
+describe("Region infrastructure", () => {
+  const steady = { ...defaultConfig, baseBirthRate: 0, baseDeathRate: 0 };
+  const plant = createInfrastructure({
+    id: "i1",
+    type: "production",
+    controller: "res",
+  });
+
+  function regionWith(
+    resistancePops: PopState[],
+    controller = "res",
+    regionalPops: PopState[] = [pop("a", 100)],
+  ): Region {
+    const data = createRegion(
+      {
+        id: "r1",
+        type: "urban",
+        productionCap: 1e9,
+        pops: regionalPops,
+        cells: [
+          createCell({
+            id: "res-1",
+            faction: "res",
+            region: "r1",
+            pops: resistancePops,
+          }),
+        ],
+        infrastructure: [{ ...plant, controller }],
+      },
+      steady,
+    );
+    return new Region(
+      { ...data, regionalCell: { ...data.regionalCell, faction: "gov" } },
+      steady,
+    );
+  }
+
+  test("createRegion keeps a copy of the given infrastructure", () => {
+    const infrastructure = [plant];
+    const r = createRegion({
+      id: "r1",
+      type: "urban",
+      productionCap: 1e9,
+      infrastructure,
+    });
+    infrastructure.push(plant);
+    expect(r.infrastructure).toEqual([plant]);
+  });
+
+  test("holds its infrastructure as Infrastructure instances", () => {
+    const r = regionWith([pop("b", 100)]);
+    expect(r.infrastructure[0]).toBeInstanceOf(Infrastructure);
+    expect(r.getState().infrastructure).toEqual([plant]);
+  });
+
+  test("a controller with pops in the region keeps control", () => {
+    const r = regionWith([pop("b", 100)]);
+    r.tick();
+    expect(r.infrastructure[0]?.controllerId).toBe("res");
+  });
+
+  test("control reverts to the planetary faction when the controller has no cell with pops", () => {
+    const r = regionWith([]);
+    r.tick();
+    expect(r.infrastructure[0]?.controllerId).toBe("gov");
+  });
+
+  test("control reverts in the tick the controller's last pop dies out", () => {
+    const r = regionWith([withExactSize(pop("b", 100), 0.6)]);
+    r.tick();
+    expect(r.cells[0]?.pops).toEqual([]);
+    expect(r.infrastructure[0]?.controllerId).toBe("gov");
+  });
+
+  test("the planetary faction keeps control even with no pops", () => {
+    const r = regionWith([], "gov", []);
+    expect(r.pops).toEqual([]);
+    r.tick();
+    expect(r.infrastructure[0]?.controllerId).toBe("gov");
   });
 });

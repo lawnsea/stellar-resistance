@@ -3,6 +3,7 @@ import {
   Cell,
   createCell,
   createFaction,
+  createInfrastructure,
   createPlanet,
   createPop,
   createRegion,
@@ -84,6 +85,39 @@ describe("Game", () => {
     expect(() => new Game({ factions: [], planets: [orphan] })).toThrow(
       "Cell x-1 names faction x, which isn't in the game",
     );
+  });
+
+  test("infrastructure controlled by a faction that isn't in the game is an error", () => {
+    const controlled = (controller: string) =>
+      createPlanet({
+        id: "pl",
+        name: "Ferrix",
+        regions: [
+          createRegion({
+            id: "r1",
+            type: "rural",
+            productionCap: 1e9,
+            infrastructure: [
+              createInfrastructure({
+                id: "i1",
+                type: "production",
+                controller,
+              }),
+            ],
+          }),
+        ],
+      });
+    expect(
+      () => new Game({ factions: [], planets: [controlled("x")] }),
+    ).toThrow(
+      "Infrastructure i1 is controlled by faction x, which isn't in the game",
+    );
+    expect(
+      () => new Game({ factions: [], planets: [controlled("pl-faction")] }),
+    ).not.toThrow();
+    expect(
+      () => new Game({ factions: [faction], planets: [controlled("f1")] }),
+    ).not.toThrow();
   });
 
   test("copies the factions and planets arrays", () => {
