@@ -29,12 +29,12 @@ The game's plain data.
 
 | Field | Type | Description |
 |---|---|---|
-| `factions` | `readonly Faction[]` | The [factions](../../design/entities/faction.md) |
+| `factions` | `readonly FactionState[]` | The [factions](../../design/entities/faction.md) |
 | `planets` | `readonly PlanetState[]` | The [planets](../../design/entities/planet.md) |
 
 ### `class Game`
 
-Implements `Stateful<GameState>` and `Tickable`. Constructed with `new Game(state, config?)`, which copies the factions and planets arrays; `config` defaults to [`defaultConfig`](engine-config.md). Getters: `factions`, and `planets`, which returns [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` advances the game n ticks, keeping its factions and ticking each planet once per tick.
+Implements `Stateful<GameState>` and `Tickable`. Constructed with `new Game(state, config?)`; `config` defaults to [`defaultConfig`](engine-config.md). Getters: `factions` and `planets`, which return [`Faction`](../../design/entities/faction.md) and [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` advances the game n ticks, keeping its factions and ticking each planet once per tick.
 
 ### `createTestGame(): Game`
 

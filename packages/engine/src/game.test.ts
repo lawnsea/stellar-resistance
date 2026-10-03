@@ -4,6 +4,7 @@ import {
   createPlanet,
   createPop,
   createRegion,
+  Faction,
   Game,
   Planet,
   Pop,
@@ -30,8 +31,9 @@ const data = { factions: [faction], planets: [planet] };
 describe("Game", () => {
   test("exposes its factions and planets", () => {
     const game = new Game(data);
-    expect(game.factions).toEqual([faction]);
+    expect(game.factions.map((f) => f.getState())).toEqual([faction]);
     expect(game.planets.map((p) => p.getState())).toEqual([planet]);
+    expect(game.factions[0]).toBeInstanceOf(Faction);
     expect(game.planets[0]).toBeInstanceOf(Planet);
   });
 
@@ -54,6 +56,13 @@ describe("Game", () => {
     expect(other.getState()).toEqual(game.getState());
   });
 
+  test("getState builds its data from its factions' getState", () => {
+    const factionGetState = vi.spyOn(Faction.prototype, "getState");
+    expect(new Game(data).getState().factions).toEqual([faction]);
+    expect(factionGetState).toHaveBeenCalledTimes(1);
+    vi.restoreAllMocks();
+  });
+
   test("getState builds its data from its planets' getState", () => {
     const planetGetState = vi.spyOn(Planet.prototype, "getState");
     new Game(data).getState();
@@ -66,7 +75,7 @@ describe("Game", () => {
     game.tick();
     const expected = new Planet(planet);
     expected.tick();
-    expect(game.factions).toEqual([faction]);
+    expect(game.factions.map((f) => f.getState())).toEqual([faction]);
     expect(game.planets[0]?.getState()).toEqual(expected.getState());
   });
 
