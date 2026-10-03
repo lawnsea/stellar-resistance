@@ -20,8 +20,8 @@ Exported from `@stellar-resistance/engine`.
 | `deprivationResponse` | `number` | How strongly deaths rise below 1.0; the death rate at 0.0 is the base × (1 + this) |
 | `deprivationCurvature` | `number` | How front-loaded the deprivation response is: higher values put more of it just below 1.0 |
 | `infrastructureUpkeep` | `Record<InfrastructureType, number>` | Units of production per tick each type of [infrastructure](../../design/entities/infrastructure.md) needs to stay in its current condition |
-| `infrastructureDamageRate` | `number` | Condition lost per tick by infrastructure that receives none of its upkeep; a partial shortfall loses the same share |
-| `infrastructureRepairRate` | `number` | Condition regained per tick by infrastructure that receives twice its upkeep; a smaller overage regains the same share |
+| `neglectEfficiency` | `number` | The fraction of the gap between an [infrastructure](../../design/entities/infrastructure.md)'s condition and the share of its upkeep requirement it received that it loses per tick, when the share is lower |
+| `repairEfficiency` | `number` | The fraction of that gap it regains per tick, when the share is higher; smaller than `neglectEfficiency` |
 
 ### `defaultConfig: EngineConfig`
 
@@ -37,5 +37,5 @@ Exported from `@stellar-resistance/engine`.
 | `deprivationResponse` | `4` | Starting value; a starving pop loses 5% per tick |
 | `deprivationCurvature` | `4` | Starting value |
 | `infrastructureUpkeep` | `{ production: 100, extraction: 100 }` | Starting value |
-| `infrastructureDamageRate` | `0.1` | Starting value; unpaid infrastructure lasts 10 ticks |
-| `infrastructureRepairRate` | `0.05` | Starting value |
+| `neglectEfficiency` | `0.1` | Starting value |
+| `repairEfficiency` | `0.05` | Starting value |

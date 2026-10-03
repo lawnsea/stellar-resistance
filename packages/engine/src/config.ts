@@ -11,8 +11,8 @@ export interface EngineConfig {
   readonly deprivationResponse: number;
   readonly deprivationCurvature: number;
   readonly infrastructureUpkeep: Readonly<Record<InfrastructureType, number>>;
-  readonly infrastructureDamageRate: number;
-  readonly infrastructureRepairRate: number;
+  readonly neglectEfficiency: number;
+  readonly repairEfficiency: number;
 }
 
 export const defaultConfig: EngineConfig = {
@@ -26,6 +26,6 @@ export const defaultConfig: EngineConfig = {
   deprivationResponse: 4,
   deprivationCurvature: 4,
   infrastructureUpkeep: { production: 100, extraction: 100 },
-  infrastructureDamageRate: 0.1,
-  infrastructureRepairRate: 0.05,
+  neglectEfficiency: 0.1,
+  repairEfficiency: 0.05,
 };

@@ -4,8 +4,8 @@ import { createInfrastructure, defaultConfig, Infrastructure } from "./index";
 const config = {
   ...defaultConfig,
   infrastructureUpkeep: { production: 100, extraction: 50 },
-  infrastructureDamageRate: 0.2,
-  infrastructureRepairRate: 0.1,
+  neglectEfficiency: 0.2,
+  repairEfficiency: 0.2,
 };
 
 const plant = createInfrastructure(
@@ -63,23 +63,44 @@ describe("Infrastructure", () => {
     expect(item.upkeepRequirement).toBe(100);
   });
 
-  test("full upkeep leaves its condition unchanged", () => {
-    expect(tickWith(100).condition).toBe(0.5);
+  test("upkeep matching its condition leaves its condition unchanged", () => {
+    expect(tickWith(50).condition).toBe(0.5);
   });
 
-  test("a shortfall damages it in proportion", () => {
-    // 40% short at a damage rate of 0.2.
-    expect(tickWith(60).condition).toBeCloseTo(0.5 - 0.2 * 0.4);
+  test("upkeep below its condition damages it by a share of the gap", () => {
+    // 30% of the requirement against a condition of 0.5.
+    expect(tickWith(30).condition).toBeCloseTo(0.5 - 0.2 * (0.5 - 0.3), 6);
   });
 
-  test("an overage repairs it in proportion, up to 1.0", () => {
-    // 50% over at a repair rate of 0.1.
-    expect(tickWith(150).condition).toBeCloseTo(0.5 + 0.1 * 0.5);
-    expect(tickWith(1000, 0.99).condition).toBe(1);
+  test("upkeep above its condition repairs it by a share of the gap", () => {
+    // 200 of 100 against a condition of 0.5: (2 - 0.5) × 0.2 = 0.3.
+    expect(tickWith(200).condition).toBeCloseTo(0.8, 6);
+  });
+
+  test("repair stops at 1.0", () => {
+    expect(tickWith(1000, 0.9).condition).toBe(1);
+  });
+
+  test("full upkeep repairs damage", () => {
+    expect(tickWith(100).condition).toBeCloseTo(0.5 + 0.2 * 0.5, 6);
+  });
+
+  test("its condition approaches the share of upkeep paid", () => {
+    const item = new Infrastructure(plant, config);
+    for (let i = 0; i < 100; i++) {
+      item.receive(50);
+      item.tick();
+    }
+    expect(item.condition).toBeCloseTo(0.5, 6);
   });
 
   test("it's destroyed when its condition reaches 0.0", () => {
-    const item = tickWith(0, 0.1);
+    const item = new Infrastructure(
+      { ...plant, condition: 0.1 },
+      { ...config, neglectEfficiency: 1 },
+    );
+    item.receive(0);
+    item.tick();
     expect(item.condition).toBe(0);
     expect(item.destroyed).toBe(true);
   });

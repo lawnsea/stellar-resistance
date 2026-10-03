@@ -2,7 +2,7 @@
 
 Infrastructure is built in a region and controlled by a faction. Each piece has a type, which is production or extraction for now. A faction keeps control only while it has a presence in the region, meaning a cell there with at least one pop; when it loses its presence, control reverts to the region's planetary faction.
 
-Infrastructure needs upkeep, in units of production per tick, set per type. Each piece has an upkeep budget, which defaults to its type's requirement. Each tick, a region's regional cell pays the budgets of its own faction's infrastructure, after reserving enough for its pops' needs; other factions' infrastructure isn't paid yet. A piece's condition runs from 0.0 to 1.0: receiving less than its requirement damages it in proportion to the shortfall, receiving more repairs it in proportion to the overage, and at 0.0 it's destroyed and removed.
+Infrastructure needs upkeep, in units of production per tick, set per type. Each piece has an upkeep budget, which defaults to its type's requirement. Each tick, a region's regional cell pays the budgets of its own faction's infrastructure, after reserving enough for its pops' needs; other factions' infrastructure isn't paid yet. A piece's condition runs from 0.0 to 1.0. Each tick, its condition moves toward the share of its requirement it received (upkeep ÷ requirement, which can exceed 1.0): down by [`neglectEfficiency`](../../architecture/engine/engine-config.md) × the gap when the share is lower, and up by [`repairEfficiency`](../../architecture/engine/engine-config.md) × the gap when it's higher, never above 1.0. So a piece paid half its upkeep tick after tick settles near 0.5. At 0.0 it's destroyed and removed.
 
 ## API
 

@@ -93,15 +93,15 @@ export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
   tick(n = 1): void {
     for (let i = 0; i < n; i++) {
       const requirement = this.upkeepRequirement;
-      const difference =
-        requirement > 0 ? (this.upkeep - requirement) / requirement : 0;
-      const rate =
-        difference < 0
-          ? this.config.infrastructureDamageRate
-          : this.config.infrastructureRepairRate;
+      const satisfied = requirement > 0 ? this.upkeep / requirement : 1;
+      const delta = satisfied - this._state.condition;
+      const efficiency =
+        delta < 0
+          ? this.config.neglectEfficiency
+          : this.config.repairEfficiency;
       const condition = Math.min(
         1,
-        Math.max(0, this._state.condition + rate * difference),
+        Math.max(0, this._state.condition + efficiency * delta),
       );
       this._state = { ...this._state, condition };
     }

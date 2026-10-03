@@ -482,8 +482,8 @@ describe("Region distribution and upkeep", () => {
     baseBirthRate: 0,
     baseDeathRate: 0,
     infrastructureUpkeep: { production: 100, extraction: 100 },
-    infrastructureDamageRate: 0.2,
-    infrastructureRepairRate: 0.1,
+    neglectEfficiency: 0.2,
+    repairEfficiency: 0.1,
   };
 
   function infra(id: string, controller: string, fields = {}) {
@@ -497,6 +497,7 @@ describe("Region distribution and upkeep", () => {
     production: number,
     infrastructure: ReturnType<typeof infra>[],
     resistancePops: PopState[] = [],
+    config: EngineConfig = economy,
   ): Region {
     const data = createRegion(
       {
@@ -515,11 +516,11 @@ describe("Region distribution and upkeep", () => {
         ],
         infrastructure,
       },
-      economy,
+      config,
     );
     const r = new Region(
       { ...data, regionalCell: { ...data.regionalCell, faction: "gov" } },
-      economy,
+      config,
     );
     r.tick();
     return r;
@@ -539,9 +540,9 @@ describe("Region distribution and upkeep", () => {
       infra("i2", "gov", { upkeepBudget: 300 }),
     ]);
     expect(r.regionalCell.pops[0]?.actualStandardOfLiving).toBeCloseTo(1);
-    // i1: 50 of 100 needed, so 50% short at a damage rate of 0.2.
+    // i1: 50 of 100 needed against a condition of 1.0: 1.0 − 0.2 × 0.5.
     expect(r.infrastructure[0]?.condition).toBeCloseTo(0.9);
-    // i2: 150 of 100 needed, so 50% over at a repair rate of 0.1.
+    // i2: 150 of 100 needed, so it stays at 1.0.
     expect(r.infrastructure[1]?.condition).toBe(1);
   });
 
@@ -555,7 +556,8 @@ describe("Region distribution and upkeep", () => {
     const r = tickWith(2000, [
       infra("i1", "gov", { upkeepBudget: 150, condition: 0.5 }),
     ]);
-    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.55);
+    // 0.5 + 0.1 × (1.5 − 0.5).
+    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.6, 6);
   });
 
   test("pops in other cells receive nothing", () => {
@@ -574,6 +576,7 @@ describe("Region distribution and upkeep", () => {
       2000,
       [infra("i1", "res", { condition: 0.1 })],
       [pop("b", 500)],
+      { ...economy, neglectEfficiency: 1 },
     );
     expect(r.infrastructure).toEqual([]);
   });
