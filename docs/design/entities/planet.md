@@ -14,6 +14,7 @@ A planet's plain data.
 |---|---|---|
 | `id` | `string` | Unique identifier |
 | `name` | `string` | Display name |
+| `factionId` | `string` (optional) | The id of the planet's [planetary faction](faction.md); when omitted, the [game](../../architecture/engine/game.md) creates one |
 | `regions` | `readonly RegionState[]` | The planet's [regions](region.md); always at least one |
 
 ### `createPlanet(fields: PlanetState): PlanetState`
@@ -22,7 +23,7 @@ Creates a planet's data with a copy of the given regions. Throws if `regions` is
 
 ### `class Planet`
 
-Implements [`Stateful<PlanetState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Planet(state, config?)`. Getters: `id`, `name`, and `regions`, which returns [`Region`](region.md) instances. `tick(n = 1)` advances the planet n ticks, ticking each region once per tick.
+Implements [`Stateful<PlanetState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Planet(state, config?)`. Getters: `id`, `name`, `factionId`, and `regions`, which returns [`Region`](region.md) instances. `tick(n = 1)` advances the planet n ticks, ticking each region once per tick.
 
 ### `testPlanets: readonly PlanetState[]`
 

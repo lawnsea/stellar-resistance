@@ -1,6 +1,7 @@
 import { defaultConfig, type EngineConfig } from "./config";
 import { Faction, type FactionState } from "./faction";
 import { Planet, type PlanetState } from "./planet";
+import { withPlanetaryFactions } from "./planetary-factions";
 import type { Stateful, Tickable } from "./traits";
 
 export interface GameState {
@@ -34,8 +35,9 @@ export class Game implements Stateful<GameState>, Tickable {
   }
 
   setState(state: GameState): void {
-    this._factions = state.factions.map((faction) => new Faction(faction));
-    this._planets = state.planets.map(
+    const filled = withPlanetaryFactions(state);
+    this._factions = filled.factions.map((faction) => new Faction(faction));
+    this._planets = filled.planets.map(
       (planet) => new Planet(planet, this.config),
     );
   }
@@ -45,6 +47,8 @@ export class Game implements Stateful<GameState>, Tickable {
       for (const planet of this._planets) {
         planet.tick();
       }
+      const { factions } = withPlanetaryFactions(this.getState());
+      this._factions = factions.map((faction) => new Faction(faction));
     }
   }
 }

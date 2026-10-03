@@ -3,10 +3,19 @@ import type { Stateful } from "./traits";
 export interface CellState {
   readonly id: string;
   readonly regionId: string;
+  readonly popIds: readonly string[];
 }
 
-export function createCell(fields: CellState): CellState {
-  return { id: fields.id, regionId: fields.regionId };
+export interface CellFields extends Omit<CellState, "popIds"> {
+  readonly popIds?: readonly string[];
+}
+
+export function createCell(fields: CellFields): CellState {
+  return {
+    id: fields.id,
+    regionId: fields.regionId,
+    popIds: [...(fields.popIds ?? [])],
+  };
 }
 
 export class Cell implements Stateful<CellState> {
@@ -22,6 +31,10 @@ export class Cell implements Stateful<CellState> {
 
   get regionId(): string {
     return this._state.regionId;
+  }
+
+  get popIds(): readonly string[] {
+    return this._state.popIds;
   }
 
   getState(): CellState {

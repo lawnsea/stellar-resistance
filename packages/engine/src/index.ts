@@ -1,4 +1,4 @@
-export { Cell, type CellState, createCell } from "./cell";
+export { Cell, type CellFields, type CellState, createCell } from "./cell";
 export { defaultConfig, type EngineConfig } from "./config";
 export {
   createFaction,

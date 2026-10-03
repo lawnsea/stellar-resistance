@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
+  createCell,
   createFaction,
   createPlanet,
   createPop,
@@ -11,7 +12,13 @@ import {
   Region,
 } from "./index";
 
-const faction = createFaction({ id: "f1", name: "The Resistance" });
+// Already consistent, so the game has no planetary faction, cell, or
+// membership to fill in.
+const faction = createFaction({
+  id: "f1",
+  name: "Ferrix",
+  cells: [createCell({ id: "r1-cell", regionId: "r1", popIds: ["p1"] })],
+});
 const region = createRegion({
   id: "r1",
   type: "rural",
@@ -25,7 +32,12 @@ const region = createRegion({
     }),
   ],
 });
-const planet = createPlanet({ id: "pl", name: "Ferrix", regions: [region] });
+const planet = createPlanet({
+  id: "pl",
+  name: "Ferrix",
+  factionId: "f1",
+  regions: [region],
+});
 const data = { factions: [faction], planets: [planet] };
 
 describe("Game", () => {
@@ -106,7 +118,7 @@ describe("tick(n) ticks each descendant once per tick", () => {
 
   test("Game ticks each planet n times, one tick at a time", () => {
     const planetTick = vi.spyOn(Planet.prototype, "tick");
-    new Game({ factions: [], planets: [planet, planet] }).tick(3);
+    new Game({ factions: [faction], planets: [planet, planet] }).tick(3);
     expect(planetTick).toHaveBeenCalledTimes(6);
     for (const call of planetTick.mock.calls) {
       expect(call[0] ?? 1).toBe(1);

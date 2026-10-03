@@ -1,6 +1,6 @@
 # Tick
 
-A tick advances the simulation one step. Ticks proceed down the hierarchy: the [game](game.md) ticks each planet once, and each planet ticks each of its regions once, so every tick's effects are applied in order across the whole game. Each region runs the phases below in order, and its pops tick during phase 2.
+A tick advances the simulation one step. Ticks proceed down the hierarchy: the [game](game.md) ticks each planet once, and each planet ticks each of its regions once, so every tick's effects are applied in order across the whole game. Each region runs the phases below in order, and its pops tick during phase 2. After every planet has ticked, the game updates [cell](../../design/entities/cell.md) membership for pops that split or died out, and adds pops without a cell to their region's planetary cell.
 
 Production is made at the end of one tick and consumed during the next: each tick, pops live on what their region produced the tick before, then produce for the tick after.
 

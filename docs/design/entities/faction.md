@@ -2,6 +2,8 @@
 
 Factions are organized groups that act in the game world. A faction acts through its cells.
 
+Each planet has a planetary faction, its local government. By default, the planetary faction has a cell in each of the planet's regions, and the pops in a region belong to that cell.
+
 ## API
 
 Exported from `@stellar-resistance/engine`.

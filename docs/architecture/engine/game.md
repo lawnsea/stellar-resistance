@@ -34,7 +34,7 @@ The game's plain data.
 
 ### `class Game`
 
-Implements `Stateful<GameState>` and `Tickable`. Constructed with `new Game(state, config?)`; `config` defaults to [`defaultConfig`](engine-config.md). Getters: `factions` and `planets`, which return [`Faction`](../../design/entities/faction.md) and [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` advances the game n ticks, keeping its factions and ticking each planet once per tick.
+Implements `Stateful<GameState>` and `Tickable`. Constructed with `new Game(state, config?)`; `config` defaults to [`defaultConfig`](engine-config.md). When created, and after each tick, the game fills in [planetary factions](../../design/entities/faction.md): a planet without a `factionId` gets a planetary faction named after it, each planetary faction gets a cell in every region of its planet that lacks one, and cell membership is updated so that the halves of a split pop take its place in its cell, pops that died out leave their cell, and pops without a cell join their region's planetary cell. A planet whose `factionId` names a missing faction is an error. Getters: `factions` and `planets`, which return [`Faction`](../../design/entities/faction.md) and [`Planet`](../../design/entities/planet.md) instances. `tick(n = 1)` advances the game n ticks, ticking each planet once per tick and then updating cell membership.
 
 ### `createTestGame(): Game`
 

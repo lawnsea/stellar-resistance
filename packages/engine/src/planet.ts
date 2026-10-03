@@ -5,6 +5,7 @@ import type { Stateful, Tickable } from "./traits";
 export interface PlanetState {
   readonly id: string;
   readonly name: string;
+  readonly factionId?: string;
   readonly regions: readonly RegionState[];
 }
 
@@ -12,7 +13,13 @@ export function createPlanet(fields: PlanetState): PlanetState {
   if (fields.regions.length === 0) {
     throw new Error(`Planet ${fields.id} must have at least one region`);
   }
-  return { id: fields.id, name: fields.name, regions: [...fields.regions] };
+  const { factionId } = fields;
+  return {
+    id: fields.id,
+    name: fields.name,
+    ...(factionId === undefined ? {} : { factionId }),
+    regions: [...fields.regions],
+  };
 }
 
 export class Planet implements Stateful<PlanetState>, Tickable {
@@ -32,6 +39,10 @@ export class Planet implements Stateful<PlanetState>, Tickable {
 
   get name(): string {
     return this._state.name;
+  }
+
+  get factionId(): string | undefined {
+    return this._state.factionId;
   }
 
   get regions(): readonly Region[] {

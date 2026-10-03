@@ -6,7 +6,15 @@ describe("createCell", () => {
     expect(createCell({ id: "c1", regionId: "r1" })).toEqual({
       id: "c1",
       regionId: "r1",
+      popIds: [],
     });
+  });
+
+  test("copies its member pop ids", () => {
+    const popIds = ["p1"];
+    const cell = createCell({ id: "c1", regionId: "r1", popIds });
+    popIds.push("p2");
+    expect(cell.popIds).toEqual(["p1"]);
   });
 });
 
