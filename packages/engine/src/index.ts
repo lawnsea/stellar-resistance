@@ -1,5 +1,11 @@
+export { Cell, type CellState, createCell } from "./cell";
 export { defaultConfig, type EngineConfig } from "./config";
-export { createFaction, type Faction } from "./faction";
+export {
+  createFaction,
+  Faction,
+  type FactionFields,
+  type FactionState,
+} from "./faction";
 export { Game, type GameState } from "./game";
 export { createPlanet, Planet, type PlanetState } from "./planet";
 export {
