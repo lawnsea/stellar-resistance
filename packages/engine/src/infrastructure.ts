@@ -75,7 +75,7 @@ export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
   }
 
   get destroyed(): boolean {
-    return this._state.condition <= 0;
+    return this._state.condition < this.config.destructionThreshold;
   }
 
   getState(): InfrastructureState {

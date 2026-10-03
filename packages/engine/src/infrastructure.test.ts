@@ -6,6 +6,7 @@ const config = {
   infrastructureUpkeep: { production: 100, extraction: 50 },
   neglectEfficiency: 0.2,
   repairEfficiency: 0.2,
+  destructionThreshold: 0.05,
 };
 
 const plant = createInfrastructure(
@@ -94,15 +95,12 @@ describe("Infrastructure", () => {
     expect(item.condition).toBeCloseTo(0.5, 6);
   });
 
-  test("it's destroyed when its condition reaches 0.0", () => {
-    const item = new Infrastructure(
-      { ...plant, condition: 0.1 },
-      { ...config, neglectEfficiency: 1 },
-    );
-    item.receive(0);
-    item.tick();
-    expect(item.condition).toBe(0);
-    expect(item.destroyed).toBe(true);
+  test("it's destroyed when its condition falls below the threshold", () => {
+    // 0.06 − 0.2 × 0.06 = 0.048.
+    expect(tickWith(0, 0.06).destroyed).toBe(true);
+    expect(
+      new Infrastructure({ ...plant, condition: 0.05 }, config).destroyed,
+    ).toBe(false);
   });
 
   test("gets and sets its state", () => {

@@ -13,6 +13,7 @@ export interface EngineConfig {
   readonly infrastructureUpkeep: Readonly<Record<InfrastructureType, number>>;
   readonly neglectEfficiency: number;
   readonly repairEfficiency: number;
+  readonly destructionThreshold: number;
 }
 
 export const defaultConfig: EngineConfig = {
@@ -28,4 +29,5 @@ export const defaultConfig: EngineConfig = {
   infrastructureUpkeep: { production: 100, extraction: 100 },
   neglectEfficiency: 0.1,
   repairEfficiency: 0.05,
+  destructionThreshold: 0.05,
 };

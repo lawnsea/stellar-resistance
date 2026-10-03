@@ -22,6 +22,7 @@ Exported from `@stellar-resistance/engine`.
 | `infrastructureUpkeep` | `Record<InfrastructureType, number>` | Units of production per tick each type of [infrastructure](../../design/entities/infrastructure.md) needs to stay in its current condition |
 | `neglectEfficiency` | `number` | The fraction of the gap between an [infrastructure](../../design/entities/infrastructure.md)'s condition and the share of its upkeep requirement it received that it loses per tick, when the share is lower |
 | `repairEfficiency` | `number` | The fraction of that gap it regains per tick, when the share is higher; smaller than `neglectEfficiency` |
+| `destructionThreshold` | `number` | Infrastructure whose condition falls below this is destroyed |
 
 ### `defaultConfig: EngineConfig`
 
@@ -39,3 +40,4 @@ Exported from `@stellar-resistance/engine`.
 | `infrastructureUpkeep` | `{ production: 100, extraction: 100 }` | Starting value |
 | `neglectEfficiency` | `0.1` | Starting value |
 | `repairEfficiency` | `0.05` | Starting value |
+| `destructionThreshold` | `0.05` | Starting value; unpaid infrastructure at full condition is destroyed after about 29 ticks |

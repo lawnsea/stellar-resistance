@@ -484,6 +484,7 @@ describe("Region distribution and upkeep", () => {
     infrastructureUpkeep: { production: 100, extraction: 100 },
     neglectEfficiency: 0.2,
     repairEfficiency: 0.1,
+    destructionThreshold: 0.05,
   };
 
   function infra(id: string, controller: string, fields = {}) {
@@ -497,7 +498,6 @@ describe("Region distribution and upkeep", () => {
     production: number,
     infrastructure: ReturnType<typeof infra>[],
     resistancePops: PopState[] = [],
-    config: EngineConfig = economy,
   ): Region {
     const data = createRegion(
       {
@@ -516,11 +516,11 @@ describe("Region distribution and upkeep", () => {
         ],
         infrastructure,
       },
-      config,
+      economy,
     );
     const r = new Region(
       { ...data, regionalCell: { ...data.regionalCell, faction: "gov" } },
-      config,
+      economy,
     );
     r.tick();
     return r;
@@ -571,12 +571,11 @@ describe("Region distribution and upkeep", () => {
     expect(r.infrastructure[0]?.condition).toBeCloseTo(0.8);
   });
 
-  test("infrastructure whose condition reaches 0.0 is destroyed and removed", () => {
+  test("infrastructure whose condition falls below the threshold is destroyed and removed", () => {
     const r = tickWith(
       2000,
-      [infra("i1", "res", { condition: 0.1 })],
+      [infra("i1", "res", { condition: 0.06 })],
       [pop("b", 500)],
-      { ...economy, neglectEfficiency: 1 },
     );
     expect(r.infrastructure).toEqual([]);
   });
