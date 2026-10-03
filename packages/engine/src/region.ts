@@ -49,32 +49,84 @@ export function computeRegionEconomy(
   return { production, consumption, surplus: production - consumption };
 }
 
+interface RegionTick {
+  readonly region: RegionState;
+  readonly economy: RegionEconomy;
+}
+
+type RegionPhase = (tick: RegionTick, config: EngineConfig) => RegionTick;
+
+const regionPhases: readonly RegionPhase[] = [
+  produce,
+  birthsAndDeaths,
+  distribute,
+  adjustExpectations,
+  splitAndRemove,
+];
+
 function nextRegionState(
   region: RegionState,
   config: EngineConfig,
 ): RegionState {
-  const economy = computeRegionEconomy(region, config);
-  const actual =
-    economy.consumption > 0 ? economy.production / economy.consumption : 0;
-  const pops = region.pops.map((pop) => {
-    const size = exactSize(pop);
-    const previous = pop.actualStandardOfLiving;
-    const births = birthRate(previous, config) * size;
-    const deaths = deathRate(previous, config) * size;
-    return withExactSize(
-      {
-        ...pop,
-        actualStandardOfLiving: actual,
-        expectedStandardOfLiving: nextExpectedStandardOfLiving(
-          pop.expectedStandardOfLiving,
-          actual,
-          config,
-        ),
-      },
-      size + births - deaths,
-    );
-  });
-  return { ...region, pops: splitAndRemovePops(pops, config) };
+  let tick: RegionTick = {
+    region,
+    economy: { production: 0, consumption: 0, surplus: 0 },
+  };
+  for (const phase of regionPhases) {
+    tick = phase(tick, config);
+  }
+  return tick.region;
+}
+
+function withPops(tick: RegionTick, pops: readonly Pop[]): RegionTick {
+  return { ...tick, region: { ...tick.region, pops } };
+}
+
+function produce(tick: RegionTick, config: EngineConfig): RegionTick {
+  return { ...tick, economy: computeRegionEconomy(tick.region, config) };
+}
+
+function birthsAndDeaths(tick: RegionTick, config: EngineConfig): RegionTick {
+  return withPops(
+    tick,
+    tick.region.pops.map((pop) => {
+      const size = exactSize(pop);
+      const previous = pop.actualStandardOfLiving;
+      const births = birthRate(previous, config) * size;
+      const deaths = deathRate(previous, config) * size;
+      return withExactSize(pop, size + births - deaths);
+    }),
+  );
+}
+
+function distribute(tick: RegionTick): RegionTick {
+  const { production, consumption } = tick.economy;
+  const actualStandardOfLiving = consumption > 0 ? production / consumption : 0;
+  return withPops(
+    tick,
+    tick.region.pops.map((pop) => ({ ...pop, actualStandardOfLiving })),
+  );
+}
+
+function adjustExpectations(
+  tick: RegionTick,
+  config: EngineConfig,
+): RegionTick {
+  return withPops(
+    tick,
+    tick.region.pops.map((pop) => ({
+      ...pop,
+      expectedStandardOfLiving: nextExpectedStandardOfLiving(
+        pop.expectedStandardOfLiving,
+        pop.actualStandardOfLiving,
+        config,
+      ),
+    })),
+  );
+}
+
+function splitAndRemove(tick: RegionTick, config: EngineConfig): RegionTick {
+  return withPops(tick, splitAndRemovePops(tick.region.pops, config));
 }
 
 // Applies after all of a region's changes for a tick. To move into a separate

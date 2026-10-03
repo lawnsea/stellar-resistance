@@ -29,7 +29,7 @@ Creates a region's data with a copy of the given pops. Throws if `productionCap`
 
 ### `class Region`
 
-Implements [`Stateful<RegionState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, and `pops`. `tick(n = 1)` advances the region n ticks: each tick updates its pops' standards of living, births, and deaths, then splits and removes pops as described in [pops](pop.md).
+Implements [`Stateful<RegionState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, and `pops`. `tick(n = 1)` advances the region n ticks, running the [tick phases](../../architecture/engine/tick.md) in order each tick.
 
 ## Economy API
 
