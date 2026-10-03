@@ -1,10 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
-  birthRate,
   computeRegionEconomy,
   createPop,
   createRegion,
-  deathRate,
   defaultConfig,
   type EngineConfig,
   type PopState,
@@ -236,44 +234,6 @@ describe("Region.tick", () => {
     expect(defaultConfig.productionRate).toBeGreaterThan(1);
     const r = region([pop("a", 1000, 1)], 1e9, undefined, defaultConfig);
     expect(computeRegionEconomy(r).surplus).toBeGreaterThan(0);
-  });
-});
-
-describe("births and deaths", () => {
-  function tickPop(p: ReturnType<typeof pop>, times = 1, production?: number) {
-    const next = tickRegion(region([p], 1e9, production), times).pops[0];
-    if (!next) throw new Error("pop missing");
-    return next;
-  }
-
-  test("births and deaths follow this tick's standard of living", () => {
-    // Previous actual 0.5; this tick's actual becomes 1.5.
-    const next = tickPop(pop("a", 1000, 0.5), 1, 1500);
-    const expected =
-      1000 + (birthRate(1.5, config) - deathRate(1.5, config)) * 1000;
-    expect(next.size).toBe(Math.floor(expected));
-  });
-
-  test("a starving pop shrinks", () => {
-    expect(tickPop(pop("a", 1000, 0)).size).toBeLessThan(1000);
-  });
-
-  test("fractional births accumulate across ticks", () => {
-    // A thriving pop of 40 gains less than one person per tick.
-    const thriving = { ...config, productionRate: 1.5 };
-    const growth = (birthRate(1.5, thriving) - deathRate(1.5, thriving)) * 40;
-    expect(growth).toBeLessThan(1);
-    const next = tickRegion(
-      region([pop("a", 40, 1.5)], 1e9, undefined, thriving),
-      10,
-      thriving,
-    );
-    expect(next.pops[0]?.size).toBeGreaterThan(40);
-  });
-
-  test("size in the API is always an integer", () => {
-    const next = tickPop(pop("a", 1234, 1.3), 3);
-    expect(Number.isInteger(next.size)).toBe(true);
   });
 });
 

@@ -5,6 +5,7 @@ import {
   deathRate,
   defaultConfig,
   nextExpectedStandardOfLiving,
+  Pop,
 } from "./index";
 
 const fields = {
@@ -179,5 +180,48 @@ describe("deathRate", () => {
 
   test("never goes below zero", () => {
     expect(deathRate(1e9)).toBeGreaterThan(0);
+  });
+});
+
+describe("births and deaths in Pop.tick", () => {
+  function tickPop(
+    size: number,
+    share: number,
+    times = 1,
+    previousActual = 1,
+  ): Pop {
+    const pop = new Pop(
+      createPop({
+        id: "p",
+        size,
+        actualStandardOfLiving: previousActual,
+        expectedStandardOfLiving: 1,
+      }),
+    );
+    pop.receive(share);
+    pop.tick(times);
+    return pop;
+  }
+
+  test("births and deaths follow this tick's standard of living", () => {
+    // Previous actual 0.5; a share of 1500 for 1000 people makes it 1.5.
+    const pop = tickPop(1000, 1500, 1, 0.5);
+    expect(pop.actualStandardOfLiving).toBe(1.5);
+    const expected = 1000 + (birthRate(1.5) - deathRate(1.5)) * 1000;
+    expect(pop.size).toBe(Math.floor(expected));
+  });
+
+  test("a starving pop shrinks", () => {
+    expect(tickPop(1000, 0).size).toBeLessThan(1000);
+  });
+
+  test("fractional births accumulate across ticks", () => {
+    // A thriving pop of 40 gains less than one person per tick.
+    expect((birthRate(1.5) - deathRate(1.5)) * 40).toBeLessThan(1);
+    expect(tickPop(40, 60, 10).size).toBeGreaterThan(40);
+  });
+
+  test("size in the API is always an integer", () => {
+    expect(Number.isInteger(tickPop(1234, 1234 * 1.3, 3).size)).toBe(true);
   });
 });
