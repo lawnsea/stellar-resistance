@@ -1,3 +1,5 @@
+import type { InfrastructureType } from "./infrastructure";
+
 export interface EngineConfig {
   readonly maxPopSize: number;
   readonly productionRate: number;
@@ -8,6 +10,10 @@ export interface EngineConfig {
   readonly prosperityCurvature: number;
   readonly deprivationResponse: number;
   readonly deprivationCurvature: number;
+  readonly infrastructureUpkeep: Readonly<Record<InfrastructureType, number>>;
+  readonly neglectEfficiency: number;
+  readonly repairEfficiency: number;
+  readonly destructionThreshold: number;
 }
 
 export const defaultConfig: EngineConfig = {
@@ -20,4 +26,8 @@ export const defaultConfig: EngineConfig = {
   prosperityCurvature: 1,
   deprivationResponse: 4,
   deprivationCurvature: 4,
+  infrastructureUpkeep: { production: 100, extraction: 100 },
+  neglectEfficiency: 0.1,
+  repairEfficiency: 0.05,
+  destructionThreshold: 0.05,
 };

@@ -168,7 +168,7 @@ export class Region implements Stateful<RegionState>, Tickable {
     this._regionalCell = new Cell(regionalCell, this.config, this);
     this._cells = cells.map((cell) => new Cell(cell, this.config, this));
     this._infrastructure = infrastructure.map(
-      (item) => new Infrastructure(item),
+      (item) => new Infrastructure(item, this.config),
     );
   }
 
@@ -177,18 +177,33 @@ export class Region implements Stateful<RegionState>, Tickable {
       this.distribute();
       this.tickPops();
       this.splitAndRemove();
-      this.revertAbandonedInfrastructure();
+      this.tickInfrastructure();
       this.produce();
     }
   }
 
   private distribute(): void {
-    const pops = this.pops;
-    const total = pops.reduce((sum, pop) => sum + exactSize(pop.getState()), 0);
-    for (const pop of pops) {
+    const members = this._regionalCell.pops;
+    const need = members.reduce(
+      (sum, pop) => sum + exactSize(pop.getState()),
+      0,
+    );
+    const production = this._state.production;
+    const reserved = Math.min(production, need);
+    const owned = this._infrastructure.filter(
+      (item) => item.controllerId === this._regionalCell.factionId,
+    );
+    const budget = owned.reduce((sum, item) => sum + item.upkeepBudget, 0);
+    const available = production - reserved;
+    const paidShare = budget > 0 ? Math.min(1, available / budget) : 0;
+    for (const item of this._infrastructure) {
+      item.receive(owned.includes(item) ? item.upkeepBudget * paidShare : 0);
+    }
+    const forPops = production - budget * paidShare;
+    for (const pop of this.pops) {
       const share =
-        total > 0
-          ? (this._state.production * exactSize(pop.getState())) / total
+        pop.cell === this._regionalCell && need > 0
+          ? (forPops * exactSize(pop.getState())) / need
           : 0;
       pop.receive(share);
     }
@@ -206,7 +221,7 @@ export class Region implements Stateful<RegionState>, Tickable {
     }
   }
 
-  private revertAbandonedInfrastructure(): void {
+  private tickInfrastructure(): void {
     const present = new Set(
       [this._regionalCell, ...this._cells]
         .filter((cell) => cell.pops.length > 0)
@@ -217,7 +232,11 @@ export class Region implements Stateful<RegionState>, Tickable {
       if (!present.has(item.controllerId)) {
         item.setState({ ...item.getState(), controller: planetaryFaction });
       }
+      item.tick();
     }
+    this._infrastructure = this._infrastructure.filter(
+      (item) => !item.destroyed,
+    );
   }
 
   private produce(): void {

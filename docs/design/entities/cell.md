@@ -1,6 +1,6 @@
 # Cell
 
-Cells are the units a faction acts through. Each cell belongs to one faction, is based in one region, and holds its member pops; each pop belongs to exactly one cell. Every region has a regional cell, which belongs to its planet's planetary faction and holds every pop in the region that isn't in another cell.
+Cells are the units a faction acts through. Each cell belongs to one faction, is based in one region, and holds its member pops; each pop belongs to exactly one cell. Every region has a regional cell, which belongs to its planet's planetary faction and holds every pop in the region that isn't in another cell. The regional cell receives the region's production each tick, feeds its own pops, and pays its faction's infrastructure upkeep; other cells have no income yet, so their members receive nothing.
 
 ## API
 
