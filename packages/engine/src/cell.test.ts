@@ -15,8 +15,15 @@ describe("createCell", () => {
       id: "c1",
       faction: "res",
       region: "r1",
+      income: 0,
       pops: [member],
     });
+  });
+
+  test("keeps a given income", () => {
+    expect(
+      createCell({ id: "c1", faction: "res", region: "r1", income: 50 }).income,
+    ).toBe(50);
   });
 
   test("members default to none", () => {

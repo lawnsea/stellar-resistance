@@ -43,38 +43,153 @@ export function createRegion(
     pops: fields.pops ?? [],
   });
   const cells = [...(fields.cells ?? [])];
-  const pops = regionPops({ regionalCell, cells });
-  const production =
-    fields.production ?? computeProduction(pops, productionCap, config);
-  if (!(production >= 0) || !Number.isFinite(production)) {
+  const infrastructure = [...(fields.infrastructure ?? [])];
+  if (
+    fields.production !== undefined &&
+    (!(fields.production >= 0) || !Number.isFinite(fields.production))
+  ) {
     throw new Error(
-      `Region ${id} production must be at least 0, got ${production}`,
+      `Region ${id} production must be at least 0, got ${fields.production}`,
     );
   }
+  const draft = { productionCap, regionalCell, cells, infrastructure };
+  const production = fields.production ?? computeProduction(draft, config);
+  const [regionalIncome = 0, ...incomes] = computeIncomes(
+    draft,
+    production,
+    config,
+  );
   return {
     id,
     type,
     productionCap,
     production,
-    regionalCell,
-    cells,
-    infrastructure: [...(fields.infrastructure ?? [])],
+    regionalCell: { ...regionalCell, income: regionalIncome },
+    cells: cells.map((cell, i) => ({ ...cell, income: incomes[i] ?? 0 })),
+    infrastructure,
   };
 }
 
+type RegionOutputState = Pick<
+  RegionState,
+  "productionCap" | "regionalCell" | "cells" | "infrastructure"
+>;
+
+interface Staffing {
+  readonly cells: readonly CellState[];
+  readonly sizes: readonly number[];
+  readonly factionSize: ReadonlyMap<string, number>;
+  readonly active: readonly InfrastructureState[];
+  // The share of each faction's staff requirement that's met.
+  staffed(faction: string): number;
+  // The share of each faction's pops drawn as staff.
+  staffShare(faction: string): number;
+  effect(item: InfrastructureState): number;
+}
+
+function sizeOf(cell: CellState): number {
+  return cell.pops.reduce((sum, pop) => sum + exactSize(pop), 0);
+}
+
+function computeStaffing(
+  region: RegionOutputState,
+  config: EngineConfig,
+): Staffing {
+  const cells = [region.regionalCell, ...region.cells];
+  const planetaryFaction = region.regionalCell.faction;
+  const active = region.infrastructure.filter(
+    (item) =>
+      item.type !== "extraction" || item.controller !== planetaryFaction,
+  );
+  const sizes = cells.map(sizeOf);
+  const factionSize = new Map<string, number>();
+  cells.forEach((cell, i) => {
+    factionSize.set(
+      cell.faction,
+      (factionSize.get(cell.faction) ?? 0) + (sizes[i] ?? 0),
+    );
+  });
+  const demand = new Map<string, number>();
+  for (const item of active) {
+    demand.set(
+      item.controller,
+      (demand.get(item.controller) ?? 0) +
+        config.infrastructureStaff[item.type],
+    );
+  }
+  const staffed = (faction: string): number => {
+    const needed = demand.get(faction) ?? 0;
+    return needed > 0
+      ? Math.min(1, (factionSize.get(faction) ?? 0) / needed)
+      : 1;
+  };
+  const staffShare = (faction: string): number => {
+    const available = factionSize.get(faction) ?? 0;
+    return available > 0
+      ? Math.min(1, (demand.get(faction) ?? 0) / available)
+      : 0;
+  };
+  const effect = (item: InfrastructureState): number =>
+    config.infrastructureImpact[item.type] *
+    staffed(item.controller) *
+    item.condition;
+  return { cells, sizes, factionSize, active, staffed, staffShare, effect };
+}
+
 function computeProduction(
-  pops: readonly PopState[],
-  productionCap: number,
+  region: RegionOutputState,
   config: EngineConfig,
 ): number {
-  let production = 0;
-  for (const pop of pops) {
-    production +=
-      exactSize(pop) *
-      config.productionRate *
-      Math.min(1, pop.actualStandardOfLiving);
+  const staffing = computeStaffing(region, config);
+  let base = 0;
+  for (const cell of staffing.cells) {
+    const working = 1 - staffing.staffShare(cell.faction);
+    for (const pop of cell.pops) {
+      base +=
+        exactSize(pop) *
+        working *
+        config.productionRate *
+        Math.min(1, pop.actualStandardOfLiving);
+    }
   }
-  return Math.min(production, productionCap);
+  const multiple = staffing.active
+    .filter((item) => item.type === "production")
+    .reduce((sum, item) => sum + staffing.effect(item), 0);
+  return Math.min(base, region.productionCap) * (1 + multiple);
+}
+
+// Each cell's income, for [regionalCell, ...cells].
+function computeIncomes(
+  region: RegionOutputState,
+  production: number,
+  config: EngineConfig,
+): number[] {
+  const staffing = computeStaffing(region, config);
+  const extraction = new Map<string, number>();
+  for (const item of staffing.active) {
+    if (item.type === "extraction") {
+      extraction.set(
+        item.controller,
+        (extraction.get(item.controller) ?? 0) + staffing.effect(item),
+      );
+    }
+  }
+  const total = [...extraction.values()].reduce((sum, e) => sum + e, 0);
+  const scale = total > 1 ? 1 / total : 1;
+  let extracted = 0;
+  const incomes = staffing.cells.map((cell, i) => {
+    const share = extraction.get(cell.faction) ?? 0;
+    const size = staffing.factionSize.get(cell.faction) ?? 0;
+    if (share === 0 || size === 0) {
+      return 0;
+    }
+    const income =
+      (production * share * scale * (staffing.sizes[i] ?? 0)) / size;
+    extracted += income;
+    return income;
+  });
+  incomes[0] = production - extracted;
+  return incomes;
 }
 
 export interface RegionEconomy {
@@ -179,33 +294,54 @@ export class Region implements Stateful<RegionState>, Tickable {
       this.splitAndRemove();
       this.tickInfrastructure();
       this.produce();
+      this.extract();
     }
   }
 
   private distribute(): void {
-    const members = this._regionalCell.pops;
-    const need = members.reduce(
-      (sum, pop) => sum + exactSize(pop.getState()),
-      0,
-    );
-    const production = this._state.production;
-    const reserved = Math.min(production, need);
-    const owned = this._infrastructure.filter(
-      (item) => item.controllerId === this._regionalCell.factionId,
-    );
-    const budget = owned.reduce((sum, item) => sum + item.upkeepBudget, 0);
-    const available = production - reserved;
-    const paidShare = budget > 0 ? Math.min(1, available / budget) : 0;
-    for (const item of this._infrastructure) {
-      item.receive(owned.includes(item) ? item.upkeepBudget * paidShare : 0);
+    const byFaction = new Map<string, Cell[]>();
+    for (const cell of [this._regionalCell, ...this._cells]) {
+      byFaction.set(cell.factionId, [
+        ...(byFaction.get(cell.factionId) ?? []),
+        cell,
+      ]);
     }
-    const forPops = production - budget * paidShare;
-    for (const pop of this.pops) {
-      const share =
-        pop.cell === this._regionalCell && need > 0
-          ? (forPops * exactSize(pop.getState())) / need
-          : 0;
-      pop.receive(share);
+    for (const item of this._infrastructure) {
+      if (!byFaction.has(item.controllerId)) {
+        item.receive(0);
+      }
+    }
+    for (const [faction, cells] of byFaction) {
+      const needs = cells.map((cell) =>
+        cell.pops.reduce((sum, pop) => sum + exactSize(pop.getState()), 0),
+      );
+      const reserves = cells.map((cell, i) =>
+        Math.min(cell.income, needs[i] ?? 0),
+      );
+      const remainders = cells.map(
+        (cell, i) => cell.income - (reserves[i] ?? 0),
+      );
+      const pool = remainders.reduce((sum, r) => sum + r, 0);
+      const owned = this._infrastructure.filter(
+        (item) => item.controllerId === faction,
+      );
+      const budget = owned.reduce((sum, item) => sum + item.upkeepBudget, 0);
+      const paidShare = budget > 0 ? Math.min(1, pool / budget) : 0;
+      for (const item of owned) {
+        item.receive(item.upkeepBudget * paidShare);
+      }
+      const leftover = pool - budget * paidShare;
+      cells.forEach((cell, i) => {
+        const need = needs[i] ?? 0;
+        const returned =
+          pool > 0 ? (leftover * (remainders[i] ?? 0)) / pool : 0;
+        const forPops = (reserves[i] ?? 0) + returned;
+        for (const pop of cell.pops) {
+          pop.receive(
+            need > 0 ? (forPops * exactSize(pop.getState())) / need : 0,
+          );
+        }
+      });
     }
   }
 
@@ -242,11 +378,18 @@ export class Region implements Stateful<RegionState>, Tickable {
   private produce(): void {
     this._state = {
       ...this._state,
-      production: computeProduction(
-        this.pops.map((pop) => pop.getState()),
-        this._state.productionCap,
-        this.config,
-      ),
+      production: computeProduction(this.getState(), this.config),
     };
+  }
+
+  private extract(): void {
+    const incomes = computeIncomes(
+      this.getState(),
+      this._state.production,
+      this.config,
+    );
+    [this._regionalCell, ...this._cells].forEach((cell, i) => {
+      cell.setIncome(incomes[i] ?? 0);
+    });
   }
 }

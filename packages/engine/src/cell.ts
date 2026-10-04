@@ -8,10 +8,12 @@ export interface CellState {
   readonly id: string;
   readonly faction: string;
   readonly region: string;
+  readonly income: number;
   readonly pops: readonly PopState[];
 }
 
-export interface CellFields extends Omit<CellState, "pops"> {
+export interface CellFields extends Omit<CellState, "income" | "pops"> {
+  readonly income?: number;
   readonly pops?: readonly PopState[];
 }
 
@@ -20,6 +22,7 @@ export function createCell(fields: CellFields): CellState {
     id: fields.id,
     faction: fields.faction,
     region: fields.region,
+    income: fields.income ?? 0,
     pops: [...(fields.pops ?? [])],
   };
 }
@@ -62,8 +65,16 @@ export class Cell implements Stateful<CellState> {
     return this._region;
   }
 
+  get income(): number {
+    return this._state.income;
+  }
+
   get pops(): readonly Pop[] {
     return this._pops;
+  }
+
+  setIncome(income: number): void {
+    this._state = { ...this._state, income };
   }
 
   joinFaction(faction: Faction): void {

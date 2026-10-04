@@ -78,7 +78,13 @@ describe("createRegion", () => {
     expect(createRegion(fields)).toEqual({
       ...own,
       production: 100 * defaultConfig.productionRate,
-      regionalCell: { id: "r1-cell", faction: "", region: "r1", pops },
+      regionalCell: {
+        id: "r1-cell",
+        faction: "",
+        region: "r1",
+        income: 100 * defaultConfig.productionRate,
+        pops,
+      },
       cells: [],
       infrastructure: [],
     });
@@ -560,7 +566,7 @@ describe("Region distribution and upkeep", () => {
     expect(r.infrastructure[0]?.condition).toBeCloseTo(0.6, 6);
   });
 
-  test("pops in other cells receive nothing", () => {
+  test("pops in other cells with no income receive nothing", () => {
     const r = tickWith(2000, [], [pop("b", 500)]);
     expect(r.cells[0]?.pops[0]?.actualStandardOfLiving).toBe(0);
     expect(r.regionalCell.pops[0]?.actualStandardOfLiving).toBeCloseTo(2);
@@ -578,5 +584,192 @@ describe("Region distribution and upkeep", () => {
       [pop("b", 500)],
     );
     expect(r.infrastructure).toEqual([]);
+  });
+});
+
+describe("Region staffing, impact, and extraction", () => {
+  const economy: EngineConfig = {
+    ...defaultConfig,
+    productionRate: 1,
+    baseBirthRate: 0,
+    baseDeathRate: 0,
+    infrastructureUpkeep: { production: 0, extraction: 0 },
+    infrastructureStaff: { production: 100, extraction: 100 },
+    infrastructureImpact: { production: 0.5, extraction: 0.2 },
+  };
+
+  function infra(
+    id: string,
+    type: "production" | "extraction",
+    controller: string,
+    condition = 1,
+  ) {
+    return createInfrastructure({ id, type, controller, condition }, economy);
+  }
+
+  function cell(id: string, faction: string, size: number) {
+    return createCell({
+      id,
+      faction,
+      region: "r1",
+      pops: size > 0 ? [pop(`${id}-p`, size, 1)] : [],
+    });
+  }
+
+  // The regional cell's faction is "" here, so "" is the planetary faction.
+  function output(
+    infrastructure: ReturnType<typeof infra>[],
+    cells: ReturnType<typeof cell>[] = [],
+    { productionCap = 1e9, production = undefined as number | undefined } = {},
+    config = economy,
+  ): RegionState {
+    return createRegion(
+      {
+        id: "r1",
+        type: "urban",
+        productionCap,
+        production,
+        pops: [pop("a", 1000, 1)],
+        cells,
+        infrastructure,
+      },
+      config,
+    );
+  }
+
+  const incomes = (r: RegionState) =>
+    [r.regionalCell, ...r.cells].map((c) => c.income);
+
+  test("staff don't produce, and production infrastructure multiplies production", () => {
+    // 900 working × (1 + 0.5).
+    expect(output([infra("i1", "production", "")]).production).toBeCloseTo(
+      1350,
+      6,
+    );
+  });
+
+  test("the cap applies before the multiple", () => {
+    const r = output([infra("i1", "production", "")], [], {
+      productionCap: 500,
+    });
+    expect(r.production).toBeCloseTo(750, 6);
+  });
+
+  test("production multiples add", () => {
+    const r = output([
+      infra("i1", "production", ""),
+      infra("i2", "production", ""),
+    ]);
+    // 800 working × (1 + 0.5 + 0.5).
+    expect(r.production).toBeCloseTo(1600, 6);
+  });
+
+  test("staff come from the controller's pops, and impact scales by staffing × condition", () => {
+    const r = output(
+      [infra("i1", "production", "res", 0.5)],
+      [cell("res-1", "res", 50)],
+    );
+    // The regional cell's 1000 all work; res's 50 all staff, half the 100 needed.
+    // 1000 × (1 + 0.5 × 0.5 × 0.5).
+    expect(r.production).toBeCloseTo(1125, 6);
+  });
+
+  test("extraction moves a share of production to the controller's cell", () => {
+    const r = output(
+      [infra("i1", "extraction", "res")],
+      [cell("res-1", "res", 100)],
+    );
+    expect(r.production).toBeCloseTo(1000, 6);
+    expect(incomes(r)[0]).toBeCloseTo(800, 6);
+    expect(incomes(r)[1]).toBeCloseTo(200, 6);
+  });
+
+  test("extraction is split among the faction's cells by size", () => {
+    const r = output(
+      [infra("i1", "extraction", "res")],
+      [cell("res-1", "res", 100), cell("res-2", "res", 300)],
+    );
+    // 1000 + 400 × 0.75 working; 20% extracted, split 1:3.
+    expect(r.production).toBeCloseTo(1300, 6);
+    const [regional, res1, res2] = incomes(r);
+    expect(regional).toBeCloseTo(1040, 6);
+    expect(res1).toBeCloseTo(65, 6);
+    expect(res2).toBeCloseTo(195, 6);
+  });
+
+  test("extraction over 100% is shared in proportion", () => {
+    const r = output(
+      [infra("i1", "extraction", "res"), infra("i2", "extraction", "ally")],
+      [cell("res-1", "res", 100), cell("ally-1", "ally", 100)],
+      {},
+      {
+        ...economy,
+        infrastructureImpact: { production: 0.5, extraction: 0.8 },
+      },
+    );
+    const [regional, res, ally] = incomes(r);
+    expect(regional).toBeCloseTo(0, 6);
+    expect(res).toBeCloseTo(500, 6);
+    expect(ally).toBeCloseTo(500, 6);
+  });
+
+  test("the planetary faction's extraction infrastructure draws no staff and extracts nothing", () => {
+    const r = output([infra("i1", "extraction", "")]);
+    expect(r.production).toBeCloseTo(1000, 6);
+    expect(incomes(r)).toEqual([r.production]);
+  });
+
+  test("a given production is still split by extraction", () => {
+    const r = output(
+      [infra("i1", "extraction", "res")],
+      [cell("res-1", "res", 100)],
+      { production: 500 },
+    );
+    expect(incomes(r)[0]).toBeCloseTo(400, 6);
+    expect(incomes(r)[1]).toBeCloseTo(100, 6);
+  });
+
+  test("each tick stores production and incomes for the next", () => {
+    const data = output(
+      [infra("i1", "extraction", "res")],
+      [cell("res-1", "res", 100)],
+    );
+    const r = new Region(data, economy);
+    r.tick();
+    // The regional cell's pops, fed 800 of 1000, produce at 0.8.
+    expect(r.production).toBeCloseTo(800, 6);
+    expect(r.regionalCell.income).toBeCloseTo(640, 6);
+    expect(r.cells[0]?.income).toBeCloseTo(160, 6);
+  });
+
+  test("a faction's cells feed their own pops and pool their surplus for its upkeep", () => {
+    const config = {
+      ...economy,
+      infrastructureUpkeep: { production: 100, extraction: 100 },
+    };
+    const data = output(
+      [{ ...infra("i1", "production", "res", 0.5), upkeepBudget: 100 }],
+      [cell("res-1", "res", 100), cell("res-2", "res", 100)],
+      {},
+      config,
+    );
+    const [res1, res2] = data.cells;
+    if (!res1 || !res2) throw new Error("cells missing");
+    const r = new Region(
+      {
+        ...data,
+        cells: [
+          { ...res1, income: 300 },
+          { ...res2, income: 0 },
+        ],
+      },
+      config,
+    );
+    r.tick();
+    // res-1 reserves 100 and pools 200; upkeep takes 100; 100 returns to res-1.
+    expect(r.cells[0]?.pops[0]?.actualStandardOfLiving).toBeCloseTo(2, 6);
+    expect(r.cells[1]?.pops[0]?.actualStandardOfLiving).toBe(0);
+    // Paid in full against a condition of 0.5: 0.5 + 0.05 × 0.5.
+    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.525, 6);
   });
 });
