@@ -22,6 +22,9 @@ describe("createInfrastructure", () => {
       controller: "gov",
       condition: 1,
       upkeepBudget: 100,
+      progress: 1,
+      constructionBudget:
+        defaultConfig.infrastructureConstructionBudget.production,
     });
   });
 
@@ -109,5 +112,77 @@ describe("Infrastructure", () => {
     item.setState(other);
     expect(item.controllerId).toBe("res");
     expect(item.getState()).toBe(other);
+  });
+});
+
+describe("Infrastructure under construction", () => {
+  const building = {
+    ...config,
+    infrastructureCost: { production: 400, extraction: 400 },
+  };
+
+  function project(progress: number, fields = {}): Infrastructure {
+    return new Infrastructure(
+      createInfrastructure(
+        { ...plant, progress, constructionBudget: 100, ...fields },
+        building,
+      ),
+      building,
+    );
+  }
+
+  test("createInfrastructure defaults to built, with its type's construction budget", () => {
+    const item = createInfrastructure({
+      id: "i1",
+      type: "extraction",
+      controller: "res",
+    });
+    expect(item.progress).toBe(1);
+    expect(item.constructionBudget).toBe(
+      defaultConfig.infrastructureConstructionBudget.extraction,
+    );
+  });
+
+  test.each([-0.1, 1.1, Number.NaN])("rejects progress %s", (progress) => {
+    expect(() => createInfrastructure({ ...plant, progress }, config)).toThrow(
+      "Infrastructure i1 progress must be in [0, 1]",
+    );
+  });
+
+  test.each([-1, Number.NaN])(
+    "rejects construction budget %s",
+    (constructionBudget) => {
+      expect(() =>
+        createInfrastructure({ ...plant, constructionBudget }, config),
+      ).toThrow("Infrastructure i1 construction budget must be at least 0");
+    },
+  );
+
+  test("asks for its construction budget, up to the remaining cost", () => {
+    expect(project(0).built).toBe(false);
+    expect(project(0).budget).toBe(100);
+    // 400 × (1 − 0.875) = 50 left.
+    expect(project(0.875).budget).toBe(50);
+    expect(project(1).budget).toBe(100);
+    expect(project(1, { upkeepBudget: 70 }).budget).toBe(70);
+  });
+
+  test("payment adds to progress until it's built", () => {
+    const item = project(0.5);
+    item.receive(100);
+    item.tick();
+    expect(item.progress).toBeCloseTo(0.75, 6);
+    item.receive(100);
+    item.tick();
+    expect(item.progress).toBe(1);
+    expect(item.built).toBe(true);
+  });
+
+  test("its condition doesn't change and it isn't destroyed while under construction", () => {
+    const item = project(0.5, { condition: 0.01 });
+    item.receive(0);
+    item.tick();
+    expect(item.condition).toBe(0.01);
+    expect(item.destroyed).toBe(false);
   });
 });

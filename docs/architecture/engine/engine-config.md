@@ -22,6 +22,8 @@ Exported from `@stellar-resistance/engine`.
 | `infrastructureUpkeep` | `Record<InfrastructureType, number>` | Units of production per tick each type of [infrastructure](../../design/entities/infrastructure.md) needs to stay in its current condition |
 | `infrastructureStaff` | `Record<InfrastructureType, number>` | People each type of infrastructure needs to work at full impact |
 | `infrastructureImpact` | `Record<InfrastructureType, number>` | Each type's impact when fully staffed and intact: for production, the amount it adds to the production multiple; for extraction, the fraction of production it extracts |
+| `infrastructureCost` | `Record<InfrastructureType, number>` | Units of production it takes to build each type of infrastructure |
+| `infrastructureConstructionBudget` | `Record<InfrastructureType, number>` | The default construction budget for each type: units of production paid toward a project per tick |
 | `neglectEfficiency` | `number` | The fraction of the gap between an [infrastructure](../../design/entities/infrastructure.md)'s condition and the share of its upkeep requirement it received that it loses per tick, when the share is lower |
 | `repairEfficiency` | `number` | The fraction of that gap it regains per tick, when the share is higher; smaller than `neglectEfficiency` |
 | `destructionThreshold` | `number` | Infrastructure whose condition falls below this is destroyed |
@@ -42,6 +44,8 @@ Exported from `@stellar-resistance/engine`.
 | `infrastructureUpkeep` | `{ production: 100, extraction: 100 }` | Starting value |
 | `infrastructureStaff` | `{ production: 100, extraction: 100 }` | Starting value |
 | `infrastructureImpact` | `{ production: 0.25, extraction: 0.1 }` | Starting value |
+| `infrastructureCost` | `{ production: 1000, extraction: 1000 }` | Starting value |
+| `infrastructureConstructionBudget` | `{ production: 100, extraction: 100 }` | Starting value; building takes at least 10 ticks |
 | `neglectEfficiency` | `0.1` | Starting value |
 | `repairEfficiency` | `0.05` | Starting value |
 | `destructionThreshold` | `0.05` | Starting value; unpaid infrastructure at full condition is destroyed after about 29 ticks |

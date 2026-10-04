@@ -1,5 +1,6 @@
 import { defaultConfig, type EngineConfig } from "./config";
 import type { Faction } from "./faction";
+import type { Infrastructure, InfrastructureType } from "./infrastructure";
 import { exactSize, Pop, type PopState, withExactSize } from "./pop";
 import type { Region } from "./region";
 import type { Stateful } from "./traits";
@@ -75,6 +76,13 @@ export class Cell implements Stateful<CellState> {
 
   setIncome(income: number): void {
     this._state = { ...this._state, income };
+  }
+
+  build(type: InfrastructureType): Infrastructure {
+    if (!this._region) {
+      throw new Error(`Cell ${this.id} isn't in a region`);
+    }
+    return this._region.build(this, type);
   }
 
   joinFaction(faction: Faction): void {

@@ -1,6 +1,11 @@
 import { Cell, type CellState, createCell } from "./cell";
 import { defaultConfig, type EngineConfig } from "./config";
-import { Infrastructure, type InfrastructureState } from "./infrastructure";
+import {
+  createInfrastructure,
+  Infrastructure,
+  type InfrastructureState,
+  type InfrastructureType,
+} from "./infrastructure";
 import { exactSize, type Pop, type PopState } from "./pop";
 import type { Stateful, Tickable } from "./traits";
 
@@ -14,6 +19,7 @@ export interface RegionState {
   readonly regionalCell: CellState;
   readonly cells: readonly CellState[];
   readonly infrastructure: readonly InfrastructureState[];
+  readonly nextInfrastructureNumber: number;
 }
 
 export interface RegionFields {
@@ -24,6 +30,7 @@ export interface RegionFields {
   readonly pops?: readonly PopState[];
   readonly cells?: readonly CellState[];
   readonly infrastructure?: readonly InfrastructureState[];
+  readonly nextInfrastructureNumber?: number;
 }
 
 export function createRegion(
@@ -67,6 +74,7 @@ export function createRegion(
     regionalCell: { ...regionalCell, income: regionalIncome },
     cells: cells.map((cell, i) => ({ ...cell, income: incomes[i] ?? 0 })),
     infrastructure,
+    nextInfrastructureNumber: fields.nextInfrastructureNumber ?? 1,
   };
 }
 
@@ -99,7 +107,8 @@ function computeStaffing(
   const planetaryFaction = region.regionalCell.faction;
   const active = region.infrastructure.filter(
     (item) =>
-      item.type !== "extraction" || item.controller !== planetaryFaction,
+      item.progress >= 1 &&
+      (item.type !== "extraction" || item.controller !== planetaryFaction),
   );
   const sizes = cells.map(sizeOf);
   const factionSize = new Map<string, number>();
@@ -287,6 +296,37 @@ export class Region implements Stateful<RegionState>, Tickable {
     );
   }
 
+  build(cell: Cell, type: InfrastructureType): Infrastructure {
+    if (cell.region !== this) {
+      throw new Error(`Cell ${cell.id} isn't in region ${this.id}`);
+    }
+    if (type === "extraction" && cell === this._regionalCell) {
+      throw new Error(
+        `Regional cell ${cell.id} can't build extraction infrastructure`,
+      );
+    }
+    const taken = new Set(this._infrastructure.map((item) => item.id));
+    let n = this._state.nextInfrastructureNumber;
+    while (taken.has(`${this.id}-infra-${n}`)) {
+      n++;
+    }
+    const item = new Infrastructure(
+      createInfrastructure(
+        {
+          id: `${this.id}-infra-${n}`,
+          type,
+          controller: cell.factionId,
+          progress: 0,
+        },
+        this.config,
+      ),
+      this.config,
+    );
+    this._state = { ...this._state, nextInfrastructureNumber: n + 1 };
+    this._infrastructure = [...this._infrastructure, item];
+    return item;
+  }
+
   tick(n = 1): void {
     for (let i = 0; i < n; i++) {
       this.distribute();
@@ -325,12 +365,18 @@ export class Region implements Stateful<RegionState>, Tickable {
       const owned = this._infrastructure.filter(
         (item) => item.controllerId === faction,
       );
-      const budget = owned.reduce((sum, item) => sum + item.upkeepBudget, 0);
-      const paidShare = budget > 0 ? Math.min(1, pool / budget) : 0;
-      for (const item of owned) {
-        item.receive(item.upkeepBudget * paidShare);
+      let leftover = pool;
+      for (const group of [
+        owned.filter((item) => item.built),
+        owned.filter((item) => !item.built),
+      ]) {
+        const budget = group.reduce((sum, item) => sum + item.budget, 0);
+        const paidShare = budget > 0 ? Math.min(1, leftover / budget) : 0;
+        for (const item of group) {
+          item.receive(item.budget * paidShare);
+        }
+        leftover -= budget * paidShare;
       }
-      const leftover = pool - budget * paidShare;
       cells.forEach((cell, i) => {
         const need = needs[i] ?? 0;
         const returned =
