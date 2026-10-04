@@ -176,9 +176,8 @@ export class Region implements Stateful<RegionState>, Tickable {
     for (let i = 0; i < n; i++) {
       this.distribute();
       this.tickPops();
-      this.tickInfrastructure();
       this.splitAndRemove();
-      this.revertAbandonedInfrastructure();
+      this.tickInfrastructure();
       this.produce();
     }
   }
@@ -216,22 +215,13 @@ export class Region implements Stateful<RegionState>, Tickable {
     }
   }
 
-  private tickInfrastructure(): void {
-    for (const item of this._infrastructure) {
-      item.tick();
-    }
-    this._infrastructure = this._infrastructure.filter(
-      (item) => !item.destroyed,
-    );
-  }
-
   private splitAndRemove(): void {
     for (const cell of [this._regionalCell, ...this._cells]) {
       cell.splitAndRemovePops();
     }
   }
 
-  private revertAbandonedInfrastructure(): void {
+  private tickInfrastructure(): void {
     const present = new Set(
       [this._regionalCell, ...this._cells]
         .filter((cell) => cell.pops.length > 0)
@@ -242,7 +232,11 @@ export class Region implements Stateful<RegionState>, Tickable {
       if (!present.has(item.controllerId)) {
         item.setState({ ...item.getState(), controller: planetaryFaction });
       }
+      item.tick();
     }
+    this._infrastructure = this._infrastructure.filter(
+      (item) => !item.destroyed,
+    );
   }
 
   private produce(): void {
