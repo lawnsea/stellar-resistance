@@ -74,6 +74,10 @@ export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
     return this.config.infrastructureUpkeep[this._state.type];
   }
 
+  get staffRequirement(): number {
+    return this.config.infrastructureStaff[this._state.type];
+  }
+
   get destroyed(): boolean {
     return this._state.condition < this.config.destructionThreshold;
   }
