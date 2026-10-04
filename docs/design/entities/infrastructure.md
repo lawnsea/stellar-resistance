@@ -11,7 +11,7 @@ Infrastructure also needs staff, a number of people set per type. Staff come fro
 
 ## Construction
 
-A [cell](cell.md) builds infrastructure in its region, and its faction controls the new piece; the regional cell can't build extraction infrastructure. A piece under construction has a progress below 1.0. Each tick its faction's cells pay toward it after upkeep, up to its construction budget (which defaults to its type's [`infrastructureConstructionBudget`](../../architecture/engine/engine-config.md)) and never more than what's left of its type's [`infrastructureCost`](../../architecture/engine/engine-config.md); if they can't pay every project's budget, each is cut by the same share. Progress grows by the payment ÷ the cost, and the piece is built when progress reaches 1.0. Until then it draws no staff, needs no upkeep, has no impact, and its condition doesn't change. Control of a project reverts to the planetary faction like control of built infrastructure, and the planetary faction keeps paying for it.
+A [cell](cell.md) builds infrastructure in its region with a build [operation](operation.md), and its faction controls the new piece; the regional cell can't build extraction infrastructure. The piece exists from the start but isn't built until the operation finishes. Until then it draws no staff, needs no upkeep, has no impact, and its condition doesn't change. Control of an unbuilt piece reverts to the planetary faction like control of built infrastructure, which cancels its operation and leaves it unbuilt.
 
 ## API
 
@@ -28,8 +28,7 @@ A piece of infrastructure's plain data.
 | `controller` | `string` | The id of the [faction](faction.md) that controls it |
 | `condition` | `number` | In (0.0, 1.0]; 1.0 is intact |
 | `upkeepBudget` | `number` | Units of production it's paid per tick when available; at least 0.0 |
-| `progress` | `number` | In [0.0, 1.0]; it's built at 1.0 |
-| `constructionBudget` | `number` | Units of production paid toward construction per tick when available; at least 0.0 |
+| `built` | `boolean` | Whether it's finished; false while its build operation runs |
 
 ### `InfrastructureType`
 
@@ -37,8 +36,8 @@ A piece of infrastructure's plain data.
 
 ### `createInfrastructure(fields: InfrastructureFields, config?: EngineConfig): InfrastructureState`
 
-Creates a piece of infrastructure's data. `InfrastructureFields` is `InfrastructureState` with `condition`, `upkeepBudget`, `progress`, and `constructionBudget` optional; they default to 1.0, the type's [`infrastructureUpkeep`](../../architecture/engine/engine-config.md), 1.0 (built), and the type's [`infrastructureConstructionBudget`](../../architecture/engine/engine-config.md). Throws if `condition` isn't in (0.0, 1.0], `progress` isn't in [0.0, 1.0], or either budget is below 0.0.
+Creates a piece of infrastructure's data. `InfrastructureFields` is `InfrastructureState` with `condition`, `upkeepBudget`, and `built` optional; they default to 1.0, the type's [`infrastructureUpkeep`](../../architecture/engine/engine-config.md), and true. Throws if `condition` isn't in (0.0, 1.0] or `upkeepBudget` is below 0.0.
 
 ### `class Infrastructure`
 
-Implements [`Stateful<InfrastructureState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Infrastructure(state, config?)`. Getters: `id`, `type`, `controllerId`, `condition`, `upkeepBudget`, `upkeepRequirement` (its type's upkeep), `staffRequirement` (its type's staff), `progress`, `built`, `cost` (its type's cost), `budget` (what it asks for this tick: its upkeep budget once built, otherwise its construction budget up to the remaining cost), and `destroyed`. `receive(amount)` gives it this tick's payment; `tick(n = 1)` adds a project's payment to its progress, or damages or repairs a built piece by its upkeep. Its [region](region.md) holds it and reverts its control when needed.
+Implements [`Stateful<InfrastructureState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Infrastructure(state, config?)`. Getters: `id`, `type`, `controllerId`, `condition`, `upkeepBudget`, `upkeepRequirement` (its type's upkeep), `staffRequirement` (its type's staff), `built`, and `destroyed`. `receive(upkeep)` offers it this tick's upkeep; `tick(n = 1)` damages or repairs it by that upkeep. Infrastructure that's unbuilt, or that wasn't offered upkeep this tick because it was built after distribution, keeps its condition. Its [region](region.md) holds it and reverts its control when needed.

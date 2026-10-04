@@ -9,16 +9,14 @@ export interface InfrastructureState {
   readonly controller: string;
   readonly condition: number;
   readonly upkeepBudget: number;
-  readonly progress: number;
-  readonly constructionBudget: number;
+  readonly built: boolean;
 }
 
 export interface InfrastructureFields
   extends Pick<InfrastructureState, "id" | "type" | "controller"> {
   readonly condition?: number;
   readonly upkeepBudget?: number;
-  readonly progress?: number;
-  readonly constructionBudget?: number;
+  readonly built?: boolean;
 }
 
 export function createInfrastructure(
@@ -28,9 +26,7 @@ export function createInfrastructure(
   const { id, type, controller } = fields;
   const condition = fields.condition ?? 1;
   const upkeepBudget = fields.upkeepBudget ?? config.infrastructureUpkeep[type];
-  const progress = fields.progress ?? 1;
-  const constructionBudget =
-    fields.constructionBudget ?? config.infrastructureConstructionBudget[type];
+  const built = fields.built ?? true;
   if (!(condition > 0 && condition <= 1)) {
     throw new Error(
       `Infrastructure ${id} condition must be in (0, 1], got ${condition}`,
@@ -41,30 +37,14 @@ export function createInfrastructure(
       `Infrastructure ${id} upkeep budget must be at least 0, got ${upkeepBudget}`,
     );
   }
-  if (!(progress >= 0 && progress <= 1)) {
-    throw new Error(
-      `Infrastructure ${id} progress must be in [0, 1], got ${progress}`,
-    );
-  }
-  if (!(constructionBudget >= 0) || !Number.isFinite(constructionBudget)) {
-    throw new Error(
-      `Infrastructure ${id} construction budget must be at least 0, got ${constructionBudget}`,
-    );
-  }
-  return {
-    id,
-    type,
-    controller,
-    condition,
-    upkeepBudget,
-    progress,
-    constructionBudget,
-  };
+  return { id, type, controller, condition, upkeepBudget, built };
 }
 
 export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
   private _state: InfrastructureState;
-  private payment = 0;
+  // Undefined until upkeep is offered, so infrastructure built after this
+  // tick's distribution keeps its condition.
+  private upkeep: number | undefined;
   private readonly config: EngineConfig;
 
   constructor(
@@ -99,27 +79,8 @@ export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
     return this.config.infrastructureUpkeep[this._state.type];
   }
 
-  get progress(): number {
-    return this._state.progress;
-  }
-
   get built(): boolean {
-    return this._state.progress >= 1;
-  }
-
-  get cost(): number {
-    return this.config.infrastructureCost[this._state.type];
-  }
-
-  // What it asks for this tick: upkeep once built, otherwise construction
-  // up to the remaining cost.
-  get budget(): number {
-    return this.built
-      ? this._state.upkeepBudget
-      : Math.min(
-          this._state.constructionBudget,
-          this.cost * (1 - this._state.progress),
-        );
+    return this._state.built;
   }
 
   get staffRequirement(): number {
@@ -140,23 +101,19 @@ export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
     this._state = state;
   }
 
-  receive(amount: number): void {
-    this.payment = amount;
+  receive(upkeep: number): void {
+    this.upkeep = upkeep;
   }
 
   tick(n = 1): void {
+    const upkeep = this.upkeep;
+    this.upkeep = undefined;
     for (let i = 0; i < n; i++) {
-      if (!this.built) {
-        const cost = this.cost;
-        const progress =
-          cost > 0
-            ? Math.min(1, this._state.progress + this.payment / cost)
-            : 1;
-        this._state = { ...this._state, progress };
+      if (!this.built || upkeep === undefined) {
         continue;
       }
       const requirement = this.upkeepRequirement;
-      const satisfied = requirement > 0 ? this.payment / requirement : 1;
+      const satisfied = requirement > 0 ? upkeep / requirement : 1;
       const delta = satisfied - this._state.condition;
       const efficiency =
         delta < 0

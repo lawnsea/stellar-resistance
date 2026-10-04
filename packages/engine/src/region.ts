@@ -6,6 +6,7 @@ import {
   type InfrastructureState,
   type InfrastructureType,
 } from "./infrastructure";
+import type { Operation } from "./operation";
 import { exactSize, type Pop, type PopState } from "./pop";
 import type { Stateful, Tickable } from "./traits";
 
@@ -107,7 +108,7 @@ function computeStaffing(
   const planetaryFaction = region.regionalCell.faction;
   const active = region.infrastructure.filter(
     (item) =>
-      item.progress >= 1 &&
+      item.built &&
       (item.type !== "extraction" || item.controller !== planetaryFaction),
   );
   const sizes = cells.map(sizeOf);
@@ -296,7 +297,7 @@ export class Region implements Stateful<RegionState>, Tickable {
     );
   }
 
-  build(cell: Cell, type: InfrastructureType): Infrastructure {
+  build(cell: Cell, type: InfrastructureType): Operation {
     if (cell.region !== this) {
       throw new Error(`Cell ${cell.id} isn't in region ${this.id}`);
     }
@@ -310,26 +311,28 @@ export class Region implements Stateful<RegionState>, Tickable {
     while (taken.has(`${this.id}-infra-${n}`)) {
       n++;
     }
+    const id = `${this.id}-infra-${n}`;
+    const operation = cell.startOperation(
+      "build",
+      id,
+      this.config.infrastructureBuild[type],
+    );
     const item = new Infrastructure(
       createInfrastructure(
-        {
-          id: `${this.id}-infra-${n}`,
-          type,
-          controller: cell.factionId,
-          progress: 0,
-        },
+        { id, type, controller: cell.factionId, built: false },
         this.config,
       ),
       this.config,
     );
     this._state = { ...this._state, nextInfrastructureNumber: n + 1 };
     this._infrastructure = [...this._infrastructure, item];
-    return item;
+    return operation;
   }
 
   tick(n = 1): void {
     for (let i = 0; i < n; i++) {
       this.distribute();
+      this.runOperations();
       this.tickPops();
       this.splitAndRemove();
       this.tickInfrastructure();
@@ -363,31 +366,38 @@ export class Region implements Stateful<RegionState>, Tickable {
       );
       const pool = remainders.reduce((sum, r) => sum + r, 0);
       const owned = this._infrastructure.filter(
-        (item) => item.controllerId === faction,
+        (item) => item.controllerId === faction && item.built,
       );
-      let leftover = pool;
-      for (const group of [
-        owned.filter((item) => item.built),
-        owned.filter((item) => !item.built),
-      ]) {
-        const budget = group.reduce((sum, item) => sum + item.budget, 0);
-        const paidShare = budget > 0 ? Math.min(1, leftover / budget) : 0;
-        for (const item of group) {
-          item.receive(item.budget * paidShare);
-        }
-        leftover -= budget * paidShare;
+      const budget = owned.reduce((sum, item) => sum + item.upkeepBudget, 0);
+      const paidShare = budget > 0 ? Math.min(1, pool / budget) : 0;
+      for (const item of owned) {
+        item.receive(item.upkeepBudget * paidShare);
       }
+      const leftover = pool - budget * paidShare;
       cells.forEach((cell, i) => {
         const need = needs[i] ?? 0;
         const returned =
           pool > 0 ? (leftover * (remainders[i] ?? 0)) / pool : 0;
-        const forPops = (reserves[i] ?? 0) + returned;
+        const saved = returned * this.config.savingsRate;
+        cell.save(saved);
+        const forPops = (reserves[i] ?? 0) + returned - saved;
         for (const pop of cell.pops) {
           pop.receive(
             need > 0 ? (forPops * exactSize(pop.getState())) / need : 0,
           );
         }
       });
+    }
+  }
+
+  private runOperations(): void {
+    for (const cell of [this._regionalCell, ...this._cells]) {
+      for (const operation of cell.runOperations()) {
+        const item = this._infrastructure.find(
+          (candidate) => candidate.id === operation.target,
+        );
+        item?.setState({ ...item.getState(), built: true });
+      }
     }
   }
 
@@ -413,6 +423,9 @@ export class Region implements Stateful<RegionState>, Tickable {
     for (const item of this._infrastructure) {
       if (!present.has(item.controllerId)) {
         item.setState({ ...item.getState(), controller: planetaryFaction });
+        for (const cell of this._cells) {
+          cell.cancelOperations(item.id);
+        }
       }
       item.tick();
     }

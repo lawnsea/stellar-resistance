@@ -33,7 +33,7 @@ Creates a region's data. `RegionFields` takes `id`, `type`, `productionCap`, and
 
 ### `class Region`
 
-Implements [`Stateful<RegionState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, `production`, `regionalCell` and `cells` (its [`Cell`](cell.md) instances, each referring back to the region), `infrastructure` (its [`Infrastructure`](infrastructure.md) instances), and `pops`, all its cells' [`Pop`](pop.md) instances. A cell whose `region` doesn't name the region holding it is an error. `build(cell, type)` starts building infrastructure for one of its cells (see [`Cell.build`](cell.md)). `tick(n = 1)` advances the region n ticks, running the [tick phases](../../architecture/engine/tick.md) in order each tick.
+Implements [`Stateful<RegionState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, `production`, `regionalCell` and `cells` (its [`Cell`](cell.md) instances, each referring back to the region), `infrastructure` (its [`Infrastructure`](infrastructure.md) instances), and `pops`, all its cells' [`Pop`](pop.md) instances. A cell whose `region` doesn't name the region holding it is an error. `build(cell, type)` starts a build operation for one of its cells and returns it (see [`Cell.build`](cell.md)). `tick(n = 1)` advances the region n ticks, running the [tick phases](../../architecture/engine/tick.md) in order each tick.
 
 ## Economy API
 

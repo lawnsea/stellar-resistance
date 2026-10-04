@@ -1,4 +1,5 @@
 import type { InfrastructureType } from "./infrastructure";
+import type { OperationCosts } from "./operation";
 
 export interface EngineConfig {
   readonly maxPopSize: number;
@@ -13,10 +14,10 @@ export interface EngineConfig {
   readonly infrastructureUpkeep: Readonly<Record<InfrastructureType, number>>;
   readonly infrastructureStaff: Readonly<Record<InfrastructureType, number>>;
   readonly infrastructureImpact: Readonly<Record<InfrastructureType, number>>;
-  readonly infrastructureCost: Readonly<Record<InfrastructureType, number>>;
-  readonly infrastructureConstructionBudget: Readonly<
-    Record<InfrastructureType, number>
+  readonly infrastructureBuild: Readonly<
+    Record<InfrastructureType, OperationCosts>
   >;
+  readonly savingsRate: number;
   readonly neglectEfficiency: number;
   readonly repairEfficiency: number;
   readonly destructionThreshold: number;
@@ -35,8 +36,11 @@ export const defaultConfig: EngineConfig = {
   infrastructureUpkeep: { production: 100, extraction: 100 },
   infrastructureStaff: { production: 100, extraction: 100 },
   infrastructureImpact: { production: 0.25, extraction: 0.1 },
-  infrastructureCost: { production: 1000, extraction: 1000 },
-  infrastructureConstructionBudget: { production: 100, extraction: 100 },
+  infrastructureBuild: {
+    production: { initialCost: 500, duration: 10, perTickCost: 50 },
+    extraction: { initialCost: 500, duration: 10, perTickCost: 50 },
+  },
+  savingsRate: 0,
   neglectEfficiency: 0.1,
   repairEfficiency: 0.05,
   destructionThreshold: 0.05,

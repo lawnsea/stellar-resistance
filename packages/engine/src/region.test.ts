@@ -4,6 +4,7 @@ import {
   computeRegionEconomy,
   createCell,
   createInfrastructure,
+  createOperation,
   createPop,
   createRegion,
   defaultConfig,
@@ -84,7 +85,10 @@ describe("createRegion", () => {
         faction: "",
         region: "r1",
         income: 100 * defaultConfig.productionRate,
+        stockpile: 0,
         pops,
+        operations: [],
+        nextOperationNumber: 1,
       },
       cells: [],
       infrastructure: [],
@@ -785,15 +789,20 @@ describe("Region construction", () => {
     infrastructureUpkeep: { production: 100, extraction: 100 },
     infrastructureStaff: { production: 100, extraction: 100 },
     infrastructureImpact: { production: 0.5, extraction: 0.2 },
-    infrastructureCost: { production: 200, extraction: 200 },
-    infrastructureConstructionBudget: { production: 100, extraction: 100 },
+    infrastructureBuild: {
+      production: { initialCost: 100, duration: 2, perTickCost: 50 },
+      extraction: { initialCost: 100, duration: 2, perTickCost: 50 },
+    },
+    savingsRate: 0.5,
   };
 
-  function regionWith(
-    infrastructure: InfrastructureState[] = [],
+  function regionWith({
+    infrastructure = [] as InfrastructureState[],
     resIncome = 0,
     resSize = 100,
-  ): Region {
+    resStockpile = 0,
+    regionalStockpile = 0,
+  } = {}): Region {
     const data = createRegion(
       {
         id: "r1",
@@ -818,53 +827,86 @@ describe("Region construction", () => {
     return new Region(
       {
         ...data,
-        regionalCell: { ...data.regionalCell, faction: "gov" },
-        cells: [{ ...res, income: resIncome }],
+        regionalCell: {
+          ...data.regionalCell,
+          faction: "gov",
+          stockpile: regionalStockpile,
+        },
+        cells: [{ ...res, income: resIncome, stockpile: resStockpile }],
       },
       building,
     );
   }
 
-  test("a cell starts a project its faction controls, with a generated id", () => {
-    const r = regionWith();
-    const item = r.cells[0]?.build("extraction");
-    expect(item?.getState()).toEqual(
+  test("each cell saves a share of what's left after its pops' reserve and upkeep", () => {
+    const r = regionWith({ resIncome: 300 });
+    r.tick();
+    // 100 reserved; 200 left, half saved and half to the pops.
+    expect(r.cells[0]?.stockpile).toBeCloseTo(100, 6);
+    expect(r.cells[0]?.pops[0]?.actualStandardOfLiving).toBeCloseTo(2, 6);
+  });
+
+  test("building starts an operation on the cell and unbuilt infrastructure in the region", () => {
+    const r = regionWith({ resStockpile: 150 });
+    const cell = r.cells[0];
+    if (!cell) throw new Error("cell missing");
+    const operation = cell.build("extraction");
+    expect(operation.getState()).toEqual(
+      createOperation({
+        id: "res-1-op-1",
+        type: "build",
+        target: "r1-infra-1",
+        ...building.infrastructureBuild.extraction,
+      }),
+    );
+    expect(cell.operations).toEqual([operation]);
+    expect(cell.stockpile).toBe(50);
+    expect(r.infrastructure.map((item) => item.getState())).toEqual([
       createInfrastructure(
         {
           id: "r1-infra-1",
           type: "extraction",
           controller: "res",
-          progress: 0,
+          built: false,
         },
         building,
       ),
-    );
-    expect(r.infrastructure).toEqual([item]);
+    ]);
     expect(r.getState().nextInfrastructureNumber).toBe(2);
-    expect(r.cells[0]?.build("production").id).toBe("r1-infra-2");
   });
 
   test("generated ids skip ones already in use", () => {
-    const r = regionWith([
-      createInfrastructure(
-        { id: "r1-infra-1", type: "production", controller: "gov" },
-        building,
-      ),
-    ]);
-    expect(r.regionalCell.build("production").id).toBe("r1-infra-2");
+    const r = regionWith({
+      infrastructure: [
+        createInfrastructure(
+          { id: "r1-infra-1", type: "production", controller: "gov" },
+          building,
+        ),
+      ],
+      regionalStockpile: 100,
+    });
+    expect(r.regionalCell.build("production").target).toBe("r1-infra-2");
     expect(r.getState().nextInfrastructureNumber).toBe(3);
   });
 
-  test("the regional cell can't build extraction infrastructure", () => {
-    expect(() => regionWith().regionalCell.build("extraction")).toThrow(
-      "Regional cell r1-cell can't build extraction infrastructure",
+  test("building something the cell can't afford changes nothing", () => {
+    const r = regionWith({ resStockpile: 99 });
+    expect(() => r.cells[0]?.build("production")).toThrow(
+      "Cell res-1 can't afford the initial cost of 100 from its stockpile of 99",
     );
+    expect(r.infrastructure).toEqual([]);
+    expect(r.getState().nextInfrastructureNumber).toBe(1);
+  });
+
+  test("the regional cell can't build extraction infrastructure", () => {
+    expect(() =>
+      regionWith({ regionalStockpile: 100 }).regionalCell.build("extraction"),
+    ).toThrow("Regional cell r1-cell can't build extraction infrastructure");
   });
 
   test("a cell can only build in its own region", () => {
     const r = regionWith();
-    const other = regionWith();
-    const cell = other.cells[0];
+    const cell = regionWith().cells[0];
     if (!cell) throw new Error("cell missing");
     expect(() => r.build(cell, "production")).toThrow(
       "Cell res-1 isn't in region r1",
@@ -876,70 +918,48 @@ describe("Region construction", () => {
     ).toThrow("Cell c isn't in a region");
   });
 
-  test("construction is paid after upkeep, up to its budget, and the rest returns to the pops", () => {
-    const r = regionWith(
-      [
-        createInfrastructure(
-          { id: "i1", type: "production", controller: "res", condition: 0.5 },
-          building,
-        ),
-      ],
-      350,
-    );
-    r.cells[0]?.build("production");
+  test("operations are paid from the stockpile after saving, in part when short", () => {
+    const r = regionWith({ resStockpile: 125, resIncome: 300 });
+    const operation = r.cells[0]?.build("production");
+    // 25 left after the initial cost, plus 100 saved this tick.
     r.tick();
-    // 100 reserved, 100 upkeep, 100 construction, 50 back to the pops.
-    expect(r.cells[0]?.pops[0]?.actualStandardOfLiving).toBeCloseTo(1.5, 6);
-    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.525, 6);
-    expect(r.infrastructure[1]?.progress).toBeCloseTo(0.5, 6);
+    expect(operation?.progress).toBe(1);
+    expect(r.cells[0]?.stockpile).toBeCloseTo(75, 6);
+    r.cells[0]?.setIncome(100);
+    r.cells[0]?.save(-50);
+    r.tick();
+    // 25 of 50.
+    expect(operation?.progress).toBeCloseTo(1.5, 6);
   });
 
-  test("upkeep comes first when there isn't enough for both", () => {
-    const r = regionWith(
-      [
-        createInfrastructure(
-          { id: "i1", type: "production", controller: "res", condition: 0.5 },
-          building,
-        ),
-      ],
-      200,
-    );
-    r.cells[0]?.build("production");
-    r.tick();
-    expect(r.infrastructure[0]?.condition).toBeCloseTo(0.525, 6);
-    expect(r.infrastructure[1]?.progress).toBe(0);
-  });
-
-  test("a project draws no staff, needs no upkeep, and has no impact until built", () => {
-    const r = regionWith([], 0, 0);
+  test("unbuilt infrastructure draws no staff, needs no upkeep, and has no impact", () => {
+    const r = regionWith({ resSize: 0, regionalStockpile: 100 });
     r.regionalCell.build("production");
     r.tick();
-    // The regional cell's 1000 all work and are fed in full; no multiple.
     expect(r.production).toBeCloseTo(1000, 6);
-    expect(r.infrastructure[0]?.progress).toBeCloseTo(0, 6);
+    expect(r.infrastructure[0]?.built).toBe(false);
+    expect(r.infrastructure[0]?.condition).toBe(1);
   });
 
-  test("a project finished in phase 4 works in that tick's production", () => {
-    const r = regionWith([], 0, 0);
-    const item = r.regionalCell.build("production");
-    for (let i = 0; i < 2; i++) {
-      // 1000 for the pops and 200 spare for construction, 100 per tick.
-      r.regionalCell.setIncome(1200);
-      r.tick();
-    }
-    expect(item.built).toBe(true);
+  test("a finished build operation builds its infrastructure in time for that tick's production", () => {
+    const r = regionWith({ resSize: 0, regionalStockpile: 200 });
+    r.regionalCell.build("production");
+    r.tick(2);
+    expect(r.regionalCell.operations).toEqual([]);
+    expect(r.infrastructure[0]?.built).toBe(true);
     // 900 working × (1 + 0.5).
     expect(r.production).toBeCloseTo(1350, 6);
   });
 
-  test("a project reverts to the planetary faction like built infrastructure", () => {
-    const r = regionWith([], 0, 100);
+  test("losing its presence cancels the operation and the unbuilt infrastructure reverts", () => {
+    const r = regionWith({ resStockpile: 100 });
     const cell = r.cells[0];
     if (!cell) throw new Error("cell missing");
-    const item = cell.build("production");
+    cell.build("production");
     cell.setState({ ...cell.getState(), pops: [] });
     r.tick();
-    expect(item.controllerId).toBe("gov");
-    expect(item.built).toBe(false);
+    expect(cell.operations).toEqual([]);
+    expect(r.infrastructure[0]?.controllerId).toBe("gov");
+    expect(r.infrastructure[0]?.built).toBe(false);
   });
 });

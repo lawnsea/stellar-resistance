@@ -8,3 +8,4 @@ The game world is made up of planets. Each planet consists of one or more region
 - [Faction](faction.md)
 - [Cell](cell.md)
 - [Infrastructure](infrastructure.md)
+- [Operation](operation.md)
