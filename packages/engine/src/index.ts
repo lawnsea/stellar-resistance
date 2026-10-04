@@ -15,6 +15,14 @@ export {
   type InfrastructureType,
 } from "./infrastructure";
 export {
+  createOperation,
+  Operation,
+  type OperationCosts,
+  type OperationFields,
+  type OperationState,
+  type OperationType,
+} from "./operation";
+export {
   createPlanet,
   Planet,
   type PlanetFields,

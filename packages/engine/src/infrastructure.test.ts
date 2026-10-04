@@ -22,6 +22,7 @@ describe("createInfrastructure", () => {
       controller: "gov",
       condition: 1,
       upkeepBudget: 100,
+      built: true,
     });
   });
 
@@ -103,11 +104,41 @@ describe("Infrastructure", () => {
     ).toBe(false);
   });
 
+  test("its condition doesn't change in a tick it wasn't offered upkeep", () => {
+    const item = new Infrastructure({ ...plant, condition: 0.5 }, config);
+    item.tick();
+    expect(item.condition).toBe(0.5);
+    item.receive(0);
+    item.tick();
+    item.tick();
+    expect(item.condition).toBeCloseTo(0.4, 6);
+  });
+
   test("gets and sets its state", () => {
     const item = new Infrastructure(plant, config);
     const other = { ...plant, controller: "res" };
     item.setState(other);
     expect(item.controllerId).toBe("res");
     expect(item.getState()).toBe(other);
+  });
+});
+
+describe("Unbuilt infrastructure", () => {
+  test("createInfrastructure defaults to built", () => {
+    expect(plant.built).toBe(true);
+    expect(createInfrastructure({ ...plant, built: false }, config).built).toBe(
+      false,
+    );
+  });
+
+  test("its condition doesn't change and it isn't destroyed until built", () => {
+    const item = new Infrastructure(
+      createInfrastructure({ ...plant, built: false, condition: 0.01 }, config),
+      config,
+    );
+    item.receive(0);
+    item.tick();
+    expect(item.condition).toBe(0.01);
+    expect(item.destroyed).toBe(false);
   });
 });

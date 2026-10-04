@@ -9,6 +9,10 @@ Infrastructure also needs staff, a number of people set per type. Staff come fro
 - **Production** infrastructure adds its [impact](../../architecture/engine/engine-config.md) to a multiple of the region's production: after the production cap is applied, production is multiplied by 1 plus the sum of every production piece's scaled impact.
 - **Extraction** infrastructure takes its scaled impact as a fraction of the region's production for its faction's cells. A faction's pieces add together; if all factions' fractions add up to more than 1.0, the production is shared in proportion. The planetary faction doesn't build extraction infrastructure, so extraction it controls draws no staff and extracts nothing; the regional cell receives everything that isn't extracted.
 
+## Construction
+
+A [cell](cell.md) builds infrastructure in its region with a build [operation](operation.md), and its faction controls the new piece; the regional cell can't build extraction infrastructure. The piece exists from the start but isn't built until the operation finishes. Until then it draws no staff, needs no upkeep, has no impact, and its condition doesn't change. Control of an unbuilt piece reverts to the planetary faction like control of built infrastructure, which cancels its operation and leaves it unbuilt.
+
 ## API
 
 Exported from `@stellar-resistance/engine`.
@@ -24,6 +28,7 @@ A piece of infrastructure's plain data.
 | `controller` | `string` | The id of the [faction](faction.md) that controls it |
 | `condition` | `number` | In (0.0, 1.0]; 1.0 is intact |
 | `upkeepBudget` | `number` | Units of production it's paid per tick when available; at least 0.0 |
+| `built` | `boolean` | Whether it's finished; false while its build operation runs |
 
 ### `InfrastructureType`
 
@@ -31,8 +36,8 @@ A piece of infrastructure's plain data.
 
 ### `createInfrastructure(fields: InfrastructureFields, config?: EngineConfig): InfrastructureState`
 
-Creates a piece of infrastructure's data. `InfrastructureFields` is `InfrastructureState` with `condition` and `upkeepBudget` optional; they default to 1.0 and the type's [`infrastructureUpkeep`](../../architecture/engine/engine-config.md). Throws if `condition` isn't in (0.0, 1.0] or `upkeepBudget` is below 0.0.
+Creates a piece of infrastructure's data. `InfrastructureFields` is `InfrastructureState` with `condition`, `upkeepBudget`, and `built` optional; they default to 1.0, the type's [`infrastructureUpkeep`](../../architecture/engine/engine-config.md), and true. Throws if `condition` isn't in (0.0, 1.0] or `upkeepBudget` is below 0.0.
 
 ### `class Infrastructure`
 
-Implements [`Stateful<InfrastructureState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Infrastructure(state, config?)`. Getters: `id`, `type`, `controllerId`, `condition`, `upkeepBudget`, `upkeepRequirement` (its type's upkeep), `staffRequirement` (its type's staff), and `destroyed`. `receive(upkeep)` gives it this tick's upkeep; `tick(n = 1)` damages or repairs it accordingly. Its [region](region.md) holds it and reverts its control when needed.
+Implements [`Stateful<InfrastructureState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Infrastructure(state, config?)`. Getters: `id`, `type`, `controllerId`, `condition`, `upkeepBudget`, `upkeepRequirement` (its type's upkeep), `staffRequirement` (its type's staff), `built`, and `destroyed`. `receive(upkeep)` offers it this tick's upkeep; `tick(n = 1)` damages or repairs it by that upkeep. Infrastructure that's unbuilt, or that wasn't offered upkeep this tick because it was built after distribution, keeps its condition. Its [region](region.md) holds it and reverts its control when needed.

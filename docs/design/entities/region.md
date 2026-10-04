@@ -20,7 +20,8 @@ A region's plain data.
 | `production` | `number` | Units produced last tick, before extraction; at least 0.0 |
 | `regionalCell` | `CellState` | The region's [regional cell](cell.md), which belongs to its planet's planetary faction and holds every pop not in another cell |
 | `cells` | `readonly CellState[]` | The region's other [cells](cell.md), such as resistance cells |
-| `infrastructure` | `readonly InfrastructureState[]` | The region's [infrastructure](infrastructure.md) |
+| `infrastructure` | `readonly InfrastructureState[]` | The region's [infrastructure](infrastructure.md), built or under construction |
+| `nextInfrastructureNumber` | `number` | The number in the id of the next infrastructure built here (`<region>-infra-<n>`); ids already in use are skipped |
 
 ### `RegionType`
 
@@ -28,11 +29,11 @@ A region's plain data.
 
 ### `createRegion(fields: RegionFields, config?: EngineConfig): RegionState`
 
-Creates a region's data. `RegionFields` takes `id`, `type`, `productionCap`, and optionally `production`, `pops`, `cells`, and `infrastructure`: the given pops go into a new regional cell (id `<region>-cell`), and the given cells are kept. When `production` is omitted, it's computed as if the region had already ticked: min(`productionCap`, Σ (working pop size × [`productionRate`](../../architecture/engine/engine-config.md) × min(1, `actualStandardOfLiving`))) × the production infrastructure multiple. Each cell's `income` is then set from `production` by extraction, as at the end of a tick. Throws if `productionCap` isn't a positive, finite number, or if `production` is below 0.0. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
+Creates a region's data. `RegionFields` takes `id`, `type`, `productionCap`, and optionally `production`, `pops`, `cells`, `infrastructure`, and `nextInfrastructureNumber` (default 1): the given pops go into a new regional cell (id `<region>-cell`), and the given cells are kept. When `production` is omitted, it's computed as if the region had already ticked: min(`productionCap`, Σ (working pop size × [`productionRate`](../../architecture/engine/engine-config.md) × min(1, `actualStandardOfLiving`))) × the production infrastructure multiple. Each cell's `income` is then set from `production` by extraction, as at the end of a tick. Throws if `productionCap` isn't a positive, finite number, or if `production` is below 0.0. `config` defaults to [`defaultConfig`](../../architecture/engine/engine-config.md).
 
 ### `class Region`
 
-Implements [`Stateful<RegionState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, `production`, `regionalCell` and `cells` (its [`Cell`](cell.md) instances, each referring back to the region), `infrastructure` (its [`Infrastructure`](infrastructure.md) instances), and `pops`, all its cells' [`Pop`](pop.md) instances. A cell whose `region` doesn't name the region holding it is an error. `tick(n = 1)` advances the region n ticks, running the [tick phases](../../architecture/engine/tick.md) in order each tick.
+Implements [`Stateful<RegionState>` and `Tickable`](../../architecture/engine/game.md). Constructed with `new Region(state, config?)`. Getters: `id`, `type`, `productionCap`, `production`, `regionalCell` and `cells` (its [`Cell`](cell.md) instances, each referring back to the region), `infrastructure` (its [`Infrastructure`](infrastructure.md) instances), and `pops`, all its cells' [`Pop`](pop.md) instances. A cell whose `region` doesn't name the region holding it is an error. `build(cell, type)` starts a build operation for one of its cells and returns it (see [`Cell.build`](cell.md)). `tick(n = 1)` advances the region n ticks, running the [tick phases](../../architecture/engine/tick.md) in order each tick.
 
 ## Economy API
 

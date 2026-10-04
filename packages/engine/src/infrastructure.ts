@@ -9,12 +9,14 @@ export interface InfrastructureState {
   readonly controller: string;
   readonly condition: number;
   readonly upkeepBudget: number;
+  readonly built: boolean;
 }
 
 export interface InfrastructureFields
-  extends Omit<InfrastructureState, "condition" | "upkeepBudget"> {
+  extends Pick<InfrastructureState, "id" | "type" | "controller"> {
   readonly condition?: number;
   readonly upkeepBudget?: number;
+  readonly built?: boolean;
 }
 
 export function createInfrastructure(
@@ -24,6 +26,7 @@ export function createInfrastructure(
   const { id, type, controller } = fields;
   const condition = fields.condition ?? 1;
   const upkeepBudget = fields.upkeepBudget ?? config.infrastructureUpkeep[type];
+  const built = fields.built ?? true;
   if (!(condition > 0 && condition <= 1)) {
     throw new Error(
       `Infrastructure ${id} condition must be in (0, 1], got ${condition}`,
@@ -34,12 +37,14 @@ export function createInfrastructure(
       `Infrastructure ${id} upkeep budget must be at least 0, got ${upkeepBudget}`,
     );
   }
-  return { id, type, controller, condition, upkeepBudget };
+  return { id, type, controller, condition, upkeepBudget, built };
 }
 
 export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
   private _state: InfrastructureState;
-  private upkeep = 0;
+  // Undefined until upkeep is offered, so infrastructure built after this
+  // tick's distribution keeps its condition.
+  private upkeep: number | undefined;
   private readonly config: EngineConfig;
 
   constructor(
@@ -74,12 +79,18 @@ export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
     return this.config.infrastructureUpkeep[this._state.type];
   }
 
+  get built(): boolean {
+    return this._state.built;
+  }
+
   get staffRequirement(): number {
     return this.config.infrastructureStaff[this._state.type];
   }
 
   get destroyed(): boolean {
-    return this._state.condition < this.config.destructionThreshold;
+    return (
+      this.built && this._state.condition < this.config.destructionThreshold
+    );
   }
 
   getState(): InfrastructureState {
@@ -95,9 +106,14 @@ export class Infrastructure implements Stateful<InfrastructureState>, Tickable {
   }
 
   tick(n = 1): void {
+    const upkeep = this.upkeep;
+    this.upkeep = undefined;
     for (let i = 0; i < n; i++) {
+      if (!this.built || upkeep === undefined) {
+        continue;
+      }
       const requirement = this.upkeepRequirement;
-      const satisfied = requirement > 0 ? this.upkeep / requirement : 1;
+      const satisfied = requirement > 0 ? upkeep / requirement : 1;
       const delta = satisfied - this._state.condition;
       const efficiency =
         delta < 0
